@@ -6,7 +6,7 @@ const steps = [
     step: "01",
     title: "Invite the Bot",
     description:
-      "Add QuestScribe to your Discord server with a single click. It joins your voice channel ready to listen.",
+      "Add TavernRecap to your Discord server with a single click. It joins your voice channel ready to listen.",
   },
   {
     icon: MessageSquare,
