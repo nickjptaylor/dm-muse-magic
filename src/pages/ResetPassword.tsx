@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Beer } from "lucide-react";
+import TavernLogo from "@/components/TavernLogo";
 import { useToast } from "@/hooks/use-toast";
 
 const ResetPassword = () => {
@@ -38,7 +38,7 @@ const ResetPassword = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-6">
         <div className="text-center">
-          <Beer className="w-10 h-10 text-gold mx-auto mb-4" />
+          <TavernLogo className="w-10 h-10 text-gold mx-auto mb-4" />
           <p className="text-muted-foreground">Invalid or expired reset link.</p>
           <a href="/auth" className="text-gold hover:text-gold-light text-sm mt-2 inline-block">
             Back to Sign In
@@ -52,7 +52,7 @@ const ResetPassword = () => {
     <div className="min-h-screen bg-background flex items-center justify-center px-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Beer className="w-8 h-8 text-gold mx-auto mb-4" />
+          <TavernLogo className="w-8 h-8 text-gold mx-auto mb-4" />
           <h1 className="text-3xl font-display text-gold-gradient mb-2">New Password</h1>
           <p className="text-muted-foreground">Enter your new password below.</p>
         </div>

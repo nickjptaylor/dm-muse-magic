@@ -1,11 +1,11 @@
-import { Beer } from "lucide-react";
+import TavernLogo from "@/components/TavernLogo";
 
 const Footer = () => {
   return (
     <footer className="border-t border-gold-subtle py-12 px-6">
       <div className="container max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-2">
-          <Beer className="w-5 h-5 text-gold" />
+          <TavernLogo className="w-5 h-5 text-gold" />
           <span className="font-display text-sm text-foreground">TavernRecap</span>
         </div>
         <p className="text-muted-foreground text-sm">

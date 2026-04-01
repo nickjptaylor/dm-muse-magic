@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Beer } from "lucide-react";
+import TavernLogo from "@/components/TavernLogo";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
@@ -72,7 +72,7 @@ const Auth = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <a href="/" className="inline-flex items-center gap-2 mb-6">
-            <Beer className="w-8 h-8 text-gold" />
+            <TavernLogo className="w-8 h-8 text-gold" />
             <span className="font-display text-2xl text-foreground tracking-wide">TavernRecap</span>
           </a>
           <h1 className="text-3xl font-display text-gold-gradient mb-2">
