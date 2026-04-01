@@ -18,12 +18,10 @@ const Auth = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, subscription } = useAuth();
-  const [searchParams] = useSearchParams();
   const isNewSignup = searchParams.get("mode") === "signup";
 
   useEffect(() => {
     if (user) {
-      // New signups or users without a subscription go to onboarding
       if (isNewSignup || !subscription.subscribed) {
         navigate("/onboarding");
       } else {
