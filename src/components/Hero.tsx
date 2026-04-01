@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Hero = () => {
+  const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
