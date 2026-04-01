@@ -24,13 +24,19 @@ const Navbar = () => {
             Pricing
           </a>
           {user ? (
-            <button
-              onClick={signOut}
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-gold transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </button>
+            <>
+              <a href="/dashboard" className="flex items-center gap-1.5 text-sm font-display text-gold hover:text-gold-light transition-colors">
+                <LayoutDashboard className="w-4 h-4" />
+                Dashboard
+              </a>
+              <button
+                onClick={signOut}
+                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-gold transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </button>
+            </>
           ) : (
             <a href="/auth" className="text-sm font-display text-gold hover:text-gold-light transition-colors">
               Sign In
