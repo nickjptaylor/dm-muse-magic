@@ -139,7 +139,7 @@ const Pricing = () => {
             Every adventurer deserves a chronicle. Pick the plan that suits your party.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {plans.map((plan) => {
             const current = isCurrentPlan(plan.tierKey);
             return (
