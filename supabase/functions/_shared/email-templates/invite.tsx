@@ -11,6 +11,7 @@ import {
   Html,
   Link,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
@@ -27,17 +28,18 @@ export const InviteEmail = ({
 }: InviteEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>You've been invited to join {siteName}</Preview>
+    <Preview>You've been invited to join TavernRecap</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>You've been invited</Heading>
+        <Section style={header}>
+          <Heading style={h1}>You've Been Summoned!</Heading>
+        </Section>
         <Text style={text}>
           You've been invited to join{' '}
           <Link href={siteUrl} style={link}>
-            <strong>{siteName}</strong>
+            <strong>TavernRecap</strong>
           </Link>
-          . Click the button below to accept the invitation and create your
-          account.
+          . Click the button below to accept the invitation and join the quest.
         </Text>
         <Button style={button} href={confirmationUrl}>
           Accept Invitation
@@ -53,27 +55,33 @@ export const InviteEmail = ({
 
 export default InviteEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
+const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', Arial, sans-serif" }
+const container = { padding: '20px 25px', maxWidth: '480px', margin: '0 auto' }
+const header = { textAlign: 'center' as const, marginBottom: '20px' }
 const h1 = {
-  fontSize: '22px',
+  fontSize: '24px',
   fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
+  fontFamily: "'Cinzel', Georgia, serif",
+  color: '#C9A84C',
+  margin: '0 0 10px',
 }
 const text = {
   fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
+  color: '#3a3a3a',
+  lineHeight: '1.6',
+  margin: '0 0 20px',
 }
-const link = { color: 'inherit', textDecoration: 'underline' }
+const link = { color: '#C9A84C', textDecoration: 'underline' }
 const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
+  backgroundColor: '#C9A84C',
+  color: '#100D14',
   fontSize: '14px',
+  fontFamily: "'Cinzel', Georgia, serif",
+  fontWeight: '600' as const,
   borderRadius: '8px',
-  padding: '12px 20px',
+  padding: '14px 24px',
   textDecoration: 'none',
+  display: 'block' as const,
+  textAlign: 'center' as const,
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const footer = { fontSize: '12px', color: '#948F82', margin: '30px 0 0' }

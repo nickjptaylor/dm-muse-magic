@@ -11,6 +11,7 @@ import {
   Html,
   Link,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
@@ -29,12 +30,14 @@ export const EmailChangeEmail = ({
 }: EmailChangeEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Confirm your email change for {siteName}</Preview>
+    <Preview>Confirm your email change for TavernRecap</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm your email change</Heading>
+        <Section style={header}>
+          <Heading style={h1}>Confirm Email Change</Heading>
+        </Section>
         <Text style={text}>
-          You requested to change your email address for {siteName} from{' '}
+          You requested to change your TavernRecap email from{' '}
           <Link href={`mailto:${email}`} style={link}>
             {email}
           </Link>{' '}
@@ -61,27 +64,33 @@ export const EmailChangeEmail = ({
 
 export default EmailChangeEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
+const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', Arial, sans-serif" }
+const container = { padding: '20px 25px', maxWidth: '480px', margin: '0 auto' }
+const header = { textAlign: 'center' as const, marginBottom: '20px' }
 const h1 = {
-  fontSize: '22px',
+  fontSize: '24px',
   fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
+  fontFamily: "'Cinzel', Georgia, serif",
+  color: '#C9A84C',
+  margin: '0 0 10px',
 }
 const text = {
   fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
+  color: '#3a3a3a',
+  lineHeight: '1.6',
+  margin: '0 0 20px',
 }
-const link = { color: 'inherit', textDecoration: 'underline' }
+const link = { color: '#C9A84C', textDecoration: 'underline' }
 const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
+  backgroundColor: '#C9A84C',
+  color: '#100D14',
   fontSize: '14px',
+  fontFamily: "'Cinzel', Georgia, serif",
+  fontWeight: '600' as const,
   borderRadius: '8px',
-  padding: '12px 20px',
+  padding: '14px 24px',
   textDecoration: 'none',
+  display: 'block' as const,
+  textAlign: 'center' as const,
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const footer = { fontSize: '12px', color: '#948F82', margin: '30px 0 0' }
