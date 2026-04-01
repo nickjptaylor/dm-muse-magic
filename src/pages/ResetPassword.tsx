@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Beer } from "lucide-react";
+import TavernLogo from "@/components/TavernLogo";
 import { useToast } from "@/hooks/use-toast";
 
 const ResetPassword = () => {
