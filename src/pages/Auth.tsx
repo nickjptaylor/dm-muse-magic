@@ -10,7 +10,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+  const [isLogin, setIsLogin] = useState(searchParams.get("mode") !== "signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
