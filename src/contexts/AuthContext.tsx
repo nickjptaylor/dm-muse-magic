@@ -3,6 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
 export const TIERS = {
+  tavernRegular: {
+    price_id: "price_1THTq7Hyzb9gRaCuoLsNVU4P",
+    product_id: "prod_UFzp7ylPjjYICA",
+    name: "Tavern Regular",
+  },
   adventurer: {
     price_id: "price_1THNufHyzb9gRaCuEifDRWrG",
     product_id: "prod_UFtiSTPZyg8WJQ",
