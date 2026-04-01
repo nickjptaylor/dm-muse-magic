@@ -23,7 +23,7 @@ const plans = [
     period: "/month",
     description: "For groups who play every week",
     features: [
-      "10 campaigns",
+      "2 campaigns",
       "12 sessions per month",
       "Unlimited session length",
       "Detailed session summaries",
