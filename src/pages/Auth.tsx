@@ -20,7 +20,7 @@ const Auth = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) navigate("/");
+    if (user) navigate("/dashboard");
   }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
