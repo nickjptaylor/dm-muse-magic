@@ -89,7 +89,7 @@ const Auth = () => {
             <Input
               id="email"
               type="email"
-              placeholder="adventurer@questscribe.com"
+              placeholder="adventurer@tavernrecap.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required

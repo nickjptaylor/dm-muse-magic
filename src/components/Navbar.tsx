@@ -10,7 +10,7 @@ const Navbar = () => {
       <div className="container max-w-6xl mx-auto flex items-center justify-between h-16 px-6">
         <a href="/" className="flex items-center gap-2">
           <Scroll className="w-6 h-6 text-gold" />
-          <span className="font-display text-lg text-foreground tracking-wide">QuestScribe</span>
+          <span className="font-display text-lg text-foreground tracking-wide"><span className="font-display text-lg text-foreground tracking-wide">TavernRecap</span></span>
         </a>
         <div className="hidden md:flex items-center gap-8">
           <a href="#features" className="text-sm text-muted-foreground hover:text-gold transition-colors">

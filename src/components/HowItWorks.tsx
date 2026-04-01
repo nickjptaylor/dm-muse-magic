@@ -13,7 +13,7 @@ const steps = [
     step: "02",
     title: "Play Your Session",
     description:
-      "Run your game as normal. QuestScribe silently transcribes everything — dialogue, combat calls, and roleplay moments.",
+      "Run your game as normal. TavernRecap silently transcribes everything — dialogue, combat calls, and roleplay moments.",
   },
   {
     icon: ScrollText,
