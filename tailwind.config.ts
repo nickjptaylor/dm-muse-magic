@@ -101,6 +101,7 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "float": "float 6s ease-in-out infinite",
+        "float-particle": "float-particle 8s ease-in-out infinite",
         "glow-pulse": "glow-pulse 3s ease-in-out infinite",
       },
     },
