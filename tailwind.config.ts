@@ -86,6 +86,12 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-10px)" },
         },
+        "float-particle": {
+          "0%": { transform: "translateY(0) scale(1)", opacity: "0" },
+          "20%": { opacity: "0.6" },
+          "80%": { opacity: "0.3" },
+          "100%": { transform: "translateY(-200px) scale(0)", opacity: "0" },
+        },
         "glow-pulse": {
           "0%, 100%": { opacity: "0.4" },
           "50%": { opacity: "0.8" },
