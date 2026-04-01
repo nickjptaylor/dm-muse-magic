@@ -46,6 +46,7 @@ export default ReauthenticationEmail
 const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', Arial, sans-serif" }
 const container = { padding: '20px 25px', maxWidth: '480px', margin: '0 auto' }
 const header = { textAlign: 'center' as const, marginBottom: '20px' }
+const logo = { margin: '0 auto 12px', borderRadius: '8px' }
 const h1 = {
   fontSize: '24px',
   fontWeight: 'bold' as const,
