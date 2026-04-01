@@ -33,7 +33,7 @@ export const SignupEmail = ({
 }: SignupEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your adventure awaits — confirm your email for TavernRecap</Preview>
+    <Preview>Your adventure awaits! Confirm your email for TavernRecap</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={header}>

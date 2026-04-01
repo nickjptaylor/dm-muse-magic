@@ -136,7 +136,7 @@ const Hero = () => {
           Chronicled Forever
         </h1>
         <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-12 leading-relaxed">
-          Transcribe your TTRPG sessions, generate character art, and get AI-powered recaps — automatically.
+          Transcribe your TTRPG sessions, generate character art, and get AI-powered recaps, automatically.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button variant="hero" size="lg" className="text-base px-8 py-6" onClick={() => navigate("/auth?mode=signup")}>
