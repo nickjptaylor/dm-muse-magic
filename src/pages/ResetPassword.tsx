@@ -38,7 +38,7 @@ const ResetPassword = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-6">
         <div className="text-center">
-          <Scroll className="w-10 h-10 text-gold mx-auto mb-4" />
+          <Beer className="w-10 h-10 text-gold mx-auto mb-4" />
           <p className="text-muted-foreground">Invalid or expired reset link.</p>
           <a href="/auth" className="text-gold hover:text-gold-light text-sm mt-2 inline-block">
             Back to Sign In
