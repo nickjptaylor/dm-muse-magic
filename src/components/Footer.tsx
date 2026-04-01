@@ -1,4 +1,4 @@
-import { Scroll } from "lucide-react";
+import { Beer } from "lucide-react";
 
 const Footer = () => {
   return (
