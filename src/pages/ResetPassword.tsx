@@ -52,7 +52,7 @@ const ResetPassword = () => {
     <div className="min-h-screen bg-background flex items-center justify-center px-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Scroll className="w-8 h-8 text-gold mx-auto mb-4" />
+          <Beer className="w-8 h-8 text-gold mx-auto mb-4" />
           <h1 className="text-3xl font-display text-gold-gradient mb-2">New Password</h1>
           <p className="text-muted-foreground">Enter your new password below.</p>
         </div>
