@@ -6,14 +6,14 @@ const steps = [
     step: "01",
     title: "Invite the Bot",
     description:
-      "Add QuestScribe to your Discord server with a single click. It joins your voice channel ready to listen.",
+      "Add TavernRecap to your Discord server with a single click. It joins your voice channel ready to listen.",
   },
   {
     icon: MessageSquare,
     step: "02",
     title: "Play Your Session",
     description:
-      "Run your game as normal. QuestScribe silently transcribes everything — dialogue, combat calls, and roleplay moments.",
+      "Run your game as normal. TavernRecap silently transcribes everything — dialogue, combat calls, and roleplay moments.",
   },
   {
     icon: ScrollText,
