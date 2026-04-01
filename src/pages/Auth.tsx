@@ -17,11 +17,18 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, subscription } = useAuth();
+  const isNewSignup = searchParams.get("mode") === "signup";
 
   useEffect(() => {
-    if (user) navigate("/dashboard");
-  }, [user, navigate]);
+    if (user) {
+      if (isNewSignup || !subscription.subscribed) {
+        navigate("/onboarding");
+      } else {
+        navigate("/dashboard");
+      }
+    }
+  }, [user, navigate, isNewSignup, subscription.subscribed]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,8 +38,6 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         toast({ title: "Login failed", description: error.message, variant: "destructive" });
-      } else {
-        navigate("/dashboard");
       }
     } else {
       const { error } = await supabase.auth.signUp({
