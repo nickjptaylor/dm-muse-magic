@@ -139,10 +139,10 @@ const Hero = () => {
           Transcribe your TTRPG sessions, generate character art, and get AI-powered recaps — automatically.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button variant="hero" size="lg" className="text-base px-8 py-6">
+          <Button variant="hero" size="lg" className="text-base px-8 py-6" onClick={() => navigate("/auth")}>
             Start Your Chronicle
           </Button>
-          <Button variant="heroOutline" size="lg" className="text-base px-8 py-6">
+          <Button variant="heroOutline" size="lg" className="text-base px-8 py-6" onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>
             See How It Works
           </Button>
         </div>
