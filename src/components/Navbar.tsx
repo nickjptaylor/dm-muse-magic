@@ -1,6 +1,10 @@
-import { Scroll } from "lucide-react";
+import { Scroll, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 
 const Navbar = () => {
+  const { user, signOut } = useAuth();
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-gold-subtle bg-background/80 backdrop-blur-md">
       <div className="container max-w-6xl mx-auto flex items-center justify-between h-16 px-6">
@@ -12,12 +16,25 @@ const Navbar = () => {
           <a href="#features" className="text-sm text-muted-foreground hover:text-gold transition-colors">
             Features
           </a>
+          <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-gold transition-colors">
+            How It Works
+          </a>
           <a href="#pricing" className="text-sm text-muted-foreground hover:text-gold transition-colors">
             Pricing
           </a>
-          <a href="#" className="text-sm font-display text-gold hover:text-gold-light transition-colors">
-            Sign In
-          </a>
+          {user ? (
+            <button
+              onClick={signOut}
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-gold transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
+          ) : (
+            <a href="/auth" className="text-sm font-display text-gold hover:text-gold-light transition-colors">
+              Sign In
+            </a>
+          )}
         </div>
       </div>
     </nav>
