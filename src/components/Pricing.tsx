@@ -11,30 +11,45 @@ const plans = [
     name: "Apprentice",
     price: "Free",
     period: "",
-    description: "Get started with your first campaign",
+    description: "Dip your toes into the adventure",
     features: [
-      "2 campaigns",
-      "3 sessions per month",
+      "1 campaign",
+      "1 session per month",
       "4 hour session limit",
-      "Session notes & transcript",
-      "1 character portrait",
+      "Basic session notes",
     ],
     cta: "Start Free",
     featured: false,
     tierKey: null as string | null,
   },
   {
+    name: "Tavern Regular",
+    price: "$5",
+    period: "/month",
+    description: "For casual players getting started",
+    features: [
+      "2 campaigns",
+      "4 sessions per month",
+      "4 hour session limit",
+      "Session notes & transcript",
+      "1 character portrait per session",
+    ],
+    cta: "Pull Up a Chair",
+    featured: false,
+    tierKey: "tavernRegular",
+  },
+  {
     name: "Adventurer",
-    price: "$6",
+    price: "$9",
     period: "/month",
     description: "For groups who play every week",
     features: [
-      "2 campaigns",
-      "12 sessions per month",
-      "Unlimited session length",
+      "5 campaigns",
+      "8 sessions per month",
+      "4 hour session limit",
       "Detailed session summaries",
       "Key moments & funny quotes",
-      "3 character portraits per session",
+      "2 character portraits per session",
       "DM tips & insights",
     ],
     cta: "Begin Your Quest",
@@ -124,7 +139,7 @@ const Pricing = () => {
             Every adventurer deserves a chronicle. Pick the plan that suits your party.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {plans.map((plan) => {
             const current = isCurrentPlan(plan.tierKey);
             return (
