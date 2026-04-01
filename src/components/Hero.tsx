@@ -1,12 +1,38 @@
+import heroAmbient from "@/assets/hero-ambient.jpg";
 import { Button } from "@/components/ui/button";
 
 const Hero = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Ambient background - no image */}
-      <div className="absolute inset-0 bg-background" />
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gold/5 blur-[150px] rounded-full" />
-      <div className="absolute bottom-0 left-1/4 w-[400px] h-[300px] bg-gold/3 blur-[120px] rounded-full" />
+      {/* Subtle background image with heavy overlay */}
+      <div className="absolute inset-0">
+        <img
+          src={heroAmbient}
+          alt=""
+          width={1920}
+          height={1080}
+          className="w-full h-full object-cover opacity-40"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/80 to-background" />
+      </div>
+
+      {/* Floating particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(12)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full bg-gold/30 animate-float-particle"
+            style={{
+              width: `${2 + Math.random() * 3}px`,
+              height: `${2 + Math.random() * 3}px`,
+              left: `${10 + Math.random() * 80}%`,
+              bottom: `${Math.random() * 40}%`,
+              animationDelay: `${Math.random() * 8}s`,
+              animationDuration: `${6 + Math.random() * 6}s`,
+            }}
+          />
+        ))}
+      </div>
 
       {/* Content */}
       <div className="relative z-10 container max-w-3xl mx-auto text-center px-6 py-32">
