@@ -8,10 +8,13 @@ import {
   Head,
   Heading,
   Html,
+  Img,
   Preview,
   Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
+
+const LOGO_URL = 'https://kowjiumihltsgebyzgox.supabase.co/storage/v1/object/public/email-assets/tavernrecap_logo.png'
 
 interface ReauthenticationEmailProps {
   token: string
@@ -24,6 +27,7 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
     <Body style={main}>
       <Container style={container}>
         <Section style={header}>
+          <Img src={LOGO_URL} alt="TavernRecap" width="48" height="48" style={logo} />
           <Heading style={h1}>Verification Code</Heading>
         </Section>
         <Text style={text}>Use the code below to confirm your identity:</Text>
@@ -42,6 +46,7 @@ export default ReauthenticationEmail
 const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', Arial, sans-serif" }
 const container = { padding: '20px 25px', maxWidth: '480px', margin: '0 auto' }
 const header = { textAlign: 'center' as const, marginBottom: '20px' }
+const logo = { margin: '0 auto 12px', borderRadius: '8px' }
 const h1 = {
   fontSize: '24px',
   fontWeight: 'bold' as const,
