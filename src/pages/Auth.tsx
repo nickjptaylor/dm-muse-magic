@@ -38,8 +38,6 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         toast({ title: "Login failed", description: error.message, variant: "destructive" });
-      } else {
-        navigate("/dashboard");
       }
     } else {
       const { error } = await supabase.auth.signUp({
