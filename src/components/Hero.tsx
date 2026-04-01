@@ -1,6 +1,7 @@
 import heroAmbient from "@/assets/hero-ambient.jpg";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Hero = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
