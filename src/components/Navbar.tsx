@@ -1,5 +1,5 @@
 import { LogOut } from "lucide-react";
-import TavernLogo from "@/components/TavernLogo";
+import tavernLogo from "@/assets/tavernrecap_logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 
