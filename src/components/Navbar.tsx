@@ -1,4 +1,4 @@
-import { Scroll, LogOut } from "lucide-react";
+import { Beer, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 
