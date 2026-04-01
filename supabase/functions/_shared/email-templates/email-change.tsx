@@ -37,6 +37,7 @@ export const EmailChangeEmail = ({
     <Body style={main}>
       <Container style={container}>
         <Section style={header}>
+          <Img src={LOGO_URL} alt="TavernRecap" width="48" height="48" style={logo} />
           <Heading style={h1}>Confirm Email Change</Heading>
         </Section>
         <Text style={text}>
