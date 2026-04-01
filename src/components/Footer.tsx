@@ -11,11 +11,9 @@ const Footer = () => {
         <p className="text-muted-foreground text-sm">
           © 2026 TavernRecap. All rights reserved.
         </p>
-        <div className="flex gap-6">
-          <a href="#" className="text-sm text-muted-foreground hover:text-gold transition-colors">Privacy</a>
-          <a href="#" className="text-sm text-muted-foreground hover:text-gold transition-colors">Terms</a>
-          <a href="#" className="text-sm text-muted-foreground hover:text-gold transition-colors">Contact</a>
-        </div>
+        <a href="mailto:hey@tavernrecap.com" className="text-sm text-muted-foreground hover:text-gold transition-colors">
+          Contact
+        </a>
       </div>
     </footer>
   );
