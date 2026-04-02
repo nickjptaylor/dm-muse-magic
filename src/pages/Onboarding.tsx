@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import TavernLogo from "@/components/TavernLogo";
+import tavernLogo from "@/assets/tavernrecap_logo.png";
 import { Check, Loader2, ChevronRight, ChevronLeft, Crown, Swords, Shield, MessageSquare, Hash, Volume2 } from "lucide-react";
 import { toast } from "sonner";
 
