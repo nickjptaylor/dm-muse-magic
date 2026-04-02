@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth, TIERS } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import TavernLogo from "@/components/TavernLogo";
+import tavernLogo from "@/assets/tavernrecap_logo.png";
 import { Crown, Swords, Shield, Settings, LogOut, Loader2, MessageSquare, Volume2, Hash, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
