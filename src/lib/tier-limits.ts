@@ -84,5 +84,6 @@ export function hasFeature(
   const limits = getTierLimits(productId);
   const value = limits[key];
   if (typeof value === "boolean") return value;
-  return value === Infinity || value > 0;
+  if (typeof value === "number") return value === Infinity || value > 0;
+  return false;
 }
