@@ -61,7 +61,7 @@ const Dashboard = () => {
       <header className="border-b border-gold-subtle">
         <div className="container max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
           <a href="/" className="flex items-center gap-2">
-            <TavernLogo className="w-7 h-7 text-gold" />
+            <img src={tavernLogo} alt="TavernRecap" className="h-7 w-auto object-contain" />
             <span className="font-display text-xl text-foreground tracking-wide">TavernRecap</span>
           </a>
           <div className="flex items-center gap-3">

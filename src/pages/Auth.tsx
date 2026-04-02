@@ -78,7 +78,7 @@ const Auth = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <a href="/" className="inline-flex items-center gap-2 mb-6">
-            <TavernLogo className="w-8 h-8 text-gold" />
+            <img src={tavernLogo} alt="TavernRecap" className="h-8 w-auto object-contain" />
             <span className="font-display text-2xl text-foreground tracking-wide">TavernRecap</span>
           </a>
           <h1 className="text-3xl font-display text-gold-gradient mb-2">

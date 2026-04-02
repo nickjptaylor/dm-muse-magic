@@ -305,7 +305,7 @@ const Onboarding = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-16">
       <a href="/" className="inline-flex items-center gap-2 mb-8">
-        <TavernLogo className="w-8 h-8 text-gold" />
+        <img src={tavernLogo} alt="TavernRecap" className="h-8 w-auto object-contain" />
         <span className="font-display text-2xl text-foreground tracking-wide">TavernRecap</span>
       </a>
 
