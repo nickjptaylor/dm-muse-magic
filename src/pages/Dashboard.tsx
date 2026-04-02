@@ -3,15 +3,60 @@ import { useAuth, TIERS } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import tavernLogo from "@/assets/tavernrecap_logo.png";
-import { Crown, Swords, Shield, Settings, LogOut, Loader2, MessageSquare, Volume2, Hash, CreditCard } from "lucide-react";
+import {
+  Crown,
+  Swords,
+  Shield,
+  Settings,
+  LogOut,
+  Loader2,
+  MessageSquare,
+  Volume2,
+  Hash,
+  CreditCard,
+  Check,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+
+const tiersList = [
+  {
+    key: "tavernRegular" as const,
+    name: "Tavern Regular",
+    price: "$5",
+    icon: Shield,
+    features: ["2 campaigns", "4 sessions/mo", "Session notes & transcript"],
+  },
+  {
+    key: "adventurer" as const,
+    name: "Adventurer",
+    price: "$9",
+    icon: Swords,
+    features: ["5 campaigns", "8 sessions/mo", "Detailed summaries & DM tips"],
+  },
+  {
+    key: "guildMaster" as const,
+    name: "Guild Master",
+    price: "$19",
+    icon: Crown,
+    features: ["Unlimited campaigns", "Unlimited sessions", "Everything included"],
+  },
+];
+
+const TIER_ORDER: Record<string, number> = {
+  [TIERS.tavernRegular.product_id]: 0,
+  [TIERS.adventurer.product_id]: 1,
+  [TIERS.guildMaster.product_id]: 2,
+};
 
 const Dashboard = () => {
   const { user, subscription, signOut, checkSubscription } = useAuth();
   const navigate = useNavigate();
   const [loadingPortal, setLoadingPortal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [switchingTier, setSwitchingTier] = useState<string | null>(null);
 
   if (!user) {
     navigate("/auth");
@@ -21,13 +66,17 @@ const Dashboard = () => {
   const currentTierName = subscription.subscribed
     ? subscription.productId === TIERS.guildMaster.product_id
       ? "Guild Master"
-      : "Adventurer"
+      : subscription.productId === TIERS.adventurer.product_id
+        ? "Adventurer"
+        : "Tavern Regular"
     : "Apprentice (Free)";
 
   const TierIcon = subscription.subscribed
     ? subscription.productId === TIERS.guildMaster.product_id
       ? Crown
-      : Swords
+      : subscription.productId === TIERS.adventurer.product_id
+        ? Swords
+        : Shield
     : Shield;
 
   const handleManageSubscription = async () => {
@@ -43,6 +92,44 @@ const Dashboard = () => {
     }
   };
 
+  const handleSwitchTier = async (tierKey: keyof typeof TIERS) => {
+    const tier = TIERS[tierKey];
+    setSwitchingTier(tierKey);
+    try {
+      const { data, error } = await supabase.functions.invoke("update-subscription", {
+        body: { newPriceId: tier.price_id },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        toast.success(`Switched to ${tier.name}!`);
+        await checkSubscription();
+      } else {
+        throw new Error(data?.error || "Unknown error");
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to switch plan.";
+      toast.error(msg);
+    } finally {
+      setSwitchingTier(null);
+    }
+  };
+
+  const handleCheckout = async (tierKey: keyof typeof TIERS) => {
+    const tier = TIERS[tierKey];
+    setSwitchingTier(tierKey);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { priceId: tier.price_id },
+      });
+      if (error) throw error;
+      if (data?.url) window.open(data.url, "_blank");
+    } catch {
+      toast.error("Failed to start checkout.");
+    } finally {
+      setSwitchingTier(null);
+    }
+  };
+
   const handleRefresh = async () => {
     setRefreshing(true);
     await checkSubscription();
@@ -54,6 +141,10 @@ const Dashboard = () => {
     await signOut();
     navigate("/");
   };
+
+  const currentTierOrder = subscription.subscribed && subscription.productId
+    ? (TIER_ORDER[subscription.productId] ?? -1)
+    : -1;
 
   return (
     <div className="min-h-screen bg-background">
@@ -106,26 +197,107 @@ const Dashboard = () => {
 
           {subscription.subscriptionEnd && (
             <p className="text-sm text-muted-foreground mb-4">
-              Renews on {new Date(subscription.subscriptionEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+              Renews on{" "}
+              {new Date(subscription.subscriptionEnd).toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}
             </p>
           )}
 
-          <div className="flex flex-wrap gap-3">
-            {subscription.subscribed ? (
+          {subscription.subscribed && (
+            <div className="mb-4">
               <Button
                 variant="heroOutline"
                 onClick={handleManageSubscription}
                 disabled={loadingPortal}
                 className="flex items-center gap-2"
               >
-                {loadingPortal ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                Manage Subscription
+                {loadingPortal ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <CreditCard className="w-4 h-4" />
+                )}
+                Payment & Billing
               </Button>
-            ) : (
-              <Button variant="hero" onClick={() => navigate("/onboarding")} className="flex items-center gap-2">
-                <Crown className="w-4 h-4" /> Upgrade Plan
-              </Button>
-            )}
+            </div>
+          )}
+
+          {/* Tier switcher */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2">
+            {tiersList.map((t) => {
+              const tier = TIERS[t.key];
+              const isCurrent =
+                subscription.subscribed && subscription.productId === tier.product_id;
+              const tierOrder = TIER_ORDER[tier.product_id];
+              const isUpgrade = tierOrder > currentTierOrder;
+              const isDowngrade = tierOrder < currentTierOrder;
+
+              return (
+                <div
+                  key={t.key}
+                  className={`rounded-lg border p-4 flex flex-col ${
+                    isCurrent
+                      ? "border-gold/50 bg-gold/5 ring-1 ring-gold/30"
+                      : "border-gold-subtle bg-card"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <t.icon className="w-4 h-4 text-gold" />
+                    <span className="font-display text-sm text-foreground">{t.name}</span>
+                  </div>
+                  <span className="text-2xl font-display text-gold-gradient mb-3">
+                    {t.price}
+                    <span className="text-sm text-muted-foreground font-sans">/mo</span>
+                  </span>
+                  <ul className="space-y-1 mb-4 flex-grow">
+                    {t.features.map((f) => (
+                      <li key={f} className="flex items-start gap-2 text-xs text-muted-foreground">
+                        <Check className="w-3 h-3 text-gold mt-0.5 flex-shrink-0" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  {isCurrent ? (
+                    <span className="text-xs text-center text-gold font-display py-2">
+                      Current Plan
+                    </span>
+                  ) : subscription.subscribed ? (
+                    <Button
+                      variant={isUpgrade ? "hero" : "heroOutline"}
+                      size="sm"
+                      className="w-full flex items-center gap-1.5"
+                      onClick={() => handleSwitchTier(t.key)}
+                      disabled={switchingTier === t.key}
+                    >
+                      {switchingTier === t.key ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : isUpgrade ? (
+                        <ArrowUp className="w-3 h-3" />
+                      ) : isDowngrade ? (
+                        <ArrowDown className="w-3 h-3" />
+                      ) : null}
+                      {isUpgrade ? "Upgrade" : "Downgrade"}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="hero"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handleCheckout(t.key)}
+                      disabled={switchingTier === t.key}
+                    >
+                      {switchingTier === t.key ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        "Subscribe"
+                      )}
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -137,7 +309,9 @@ const Dashboard = () => {
             </div>
             <div>
               <h2 className="font-display text-xl text-foreground">Discord Bot Setup</h2>
-              <p className="text-sm text-muted-foreground">Configure how TavernRecap connects to your server</p>
+              <p className="text-sm text-muted-foreground">
+                Configure how TavernRecap connects to your server
+              </p>
             </div>
           </div>
 
@@ -167,7 +341,8 @@ const Dashboard = () => {
 
           <div className="mt-6 px-4 py-3 rounded-md bg-gold/5 border border-gold/10">
             <p className="text-sm text-muted-foreground">
-              <span className="text-gold font-display">Coming Soon:</span> Full Discord bot integration with one-click setup. Stay tuned!
+              <span className="text-gold font-display">Coming Soon:</span> Full Discord bot
+              integration with one-click setup. Stay tuned!
             </p>
           </div>
         </div>
