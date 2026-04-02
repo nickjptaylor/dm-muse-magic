@@ -9,8 +9,8 @@ export const TIERS = {
     name: "Tavern Regular",
   },
   adventurer: {
-    price_id: "price_1THNufHyzb9gRaCuEifDRWrG",
-    product_id: "prod_UFtiSTPZyg8WJQ",
+    price_id: "price_1THfJjHyzb9gRaCumghPX0l2",
+    product_id: "prod_UGBhmLly8JXtcH",
     name: "Adventurer",
   },
   guildMaster: {
