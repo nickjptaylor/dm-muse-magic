@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth, TIERS } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import TavernLogo from "@/components/TavernLogo";
+import tavernLogo from "@/assets/tavernrecap_logo.png";
 import { Crown, Swords, Shield, Settings, LogOut, Loader2, MessageSquare, Volume2, Hash, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -61,7 +61,7 @@ const Dashboard = () => {
       <header className="border-b border-gold-subtle">
         <div className="container max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
           <a href="/" className="flex items-center gap-2">
-            <TavernLogo className="w-7 h-7 text-gold" />
+            <img src={tavernLogo} alt="TavernRecap" className="h-7 w-auto object-contain" />
             <span className="font-display text-xl text-foreground tracking-wide">TavernRecap</span>
           </a>
           <div className="flex items-center gap-3">

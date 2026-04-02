@@ -1,11 +1,11 @@
-import TavernLogo from "@/components/TavernLogo";
+import tavernLogo from "@/assets/tavernrecap_logo.png";
 
 const Footer = () => {
   return (
     <footer className="border-t border-gold-subtle py-12 px-6">
       <div className="container max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-2">
-          <TavernLogo className="w-5 h-5 text-gold" />
+          <img src={tavernLogo} alt="TavernRecap" className="h-5 w-auto object-contain" />
           <span className="font-display text-sm text-foreground">TavernRecap</span>
         </div>
         <p className="text-muted-foreground text-sm">
