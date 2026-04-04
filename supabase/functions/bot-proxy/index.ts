@@ -9,6 +9,21 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const url = new URL(req.url);
+    const action = url.searchParams.get("action");
+    const guildId = url.searchParams.get("guild_id");
+    const botApiKey = Deno.env.get("BOT_API_KEY")!;
+
+    if (action === "info") {
+      const res = await fetch(`${BOT_API_BASE}/info`, {
+        headers: { "x-bot-api-key": botApiKey },
+      });
+      const data = await res.json();
+      return new Response(JSON.stringify(data), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -27,21 +42,6 @@ Deno.serve(async (req) => {
     if (userError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const url = new URL(req.url);
-    const action = url.searchParams.get("action");
-    const guildId = url.searchParams.get("guild_id");
-    const botApiKey = Deno.env.get("BOT_API_KEY")!;
-
-    if (action === "info") {
-      const res = await fetch(`${BOT_API_BASE}/info`, {
-        headers: { "x-bot-api-key": botApiKey },
-      });
-      const data = await res.json();
-      return new Response(JSON.stringify(data), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
