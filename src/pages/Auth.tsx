@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import tavernLogo from "@/assets/tavernrecap_logo.png";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -17,18 +16,25 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { user, subscription } = useAuth();
+  const { user } = useAuth();
   const isNewSignup = searchParams.get("mode") === "signup";
 
   useEffect(() => {
-    if (user) {
-      if (isNewSignup || !subscription.subscribed) {
-        navigate("/onboarding");
-      } else {
-        navigate("/dashboard");
-      }
-    }
-  }, [user, navigate, isNewSignup, subscription.subscribed]);
+    if (!user) return;
+    // Check if user has completed onboarding
+    supabase
+      .from("profiles")
+      .select("onboarding_completed")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (isNewSignup || !data?.onboarding_completed) {
+          navigate("/onboarding");
+        } else {
+          navigate("/dashboard");
+        }
+      });
+  }, [user, navigate, isNewSignup]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

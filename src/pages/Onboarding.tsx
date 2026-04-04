@@ -296,7 +296,12 @@ const Onboarding = () => {
         </div>
       )}
 
-      <Button variant="hero" size="lg" className="px-12" onClick={() => navigate("/dashboard")}>
+      <Button variant="hero" size="lg" className="px-12" onClick={async () => {
+        if (user) {
+          await supabase.from("profiles").update({ onboarding_completed: true }).eq("user_id", user.id);
+        }
+        navigate("/dashboard");
+      }}>
         Enter the Tavern <ChevronRight className="w-4 h-4 ml-1" />
       </Button>
     </div>
