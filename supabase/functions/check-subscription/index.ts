@@ -82,19 +82,13 @@ serve(async (req) => {
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0] as any;
-      log("Full subscription keys", Object.keys(subscription));
-      log("Subscription period fields", {
-        current_period_end: subscription.current_period_end,
-        currentPeriodEnd: subscription.currentPeriodEnd,
-        ended_at: subscription.ended_at,
-        cancel_at: subscription.cancel_at,
-      });
-      // Try multiple possible property names
-      const endTimestamp = subscription.current_period_end ?? subscription.currentPeriodEnd;
+      const item = subscription.items.data[0];
+      productId = item.price.product;
+      // In API version 2025-08-27.basil, current_period_end is on the item, not the subscription
+      const endTimestamp = item.current_period_end;
       if (endTimestamp) {
         subscriptionEnd = new Date(Number(endTimestamp) * 1000).toISOString();
       }
-      productId = subscription.items.data[0].price.product;
     }
 
     return new Response(JSON.stringify({
