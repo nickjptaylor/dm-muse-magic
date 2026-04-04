@@ -104,28 +104,37 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          discord_access_token: string | null
+          discord_guilds: Json | null
           discord_id: string | null
           display_name: string | null
           id: string
           onboarding_completed: boolean
+          selected_guild_id: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          discord_access_token?: string | null
+          discord_guilds?: Json | null
           discord_id?: string | null
           display_name?: string | null
           id?: string
           onboarding_completed?: boolean
+          selected_guild_id?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          discord_access_token?: string | null
+          discord_guilds?: Json | null
           discord_id?: string | null
           display_name?: string | null
           id?: string
           onboarding_completed?: boolean
+          selected_guild_id?: string | null
           updated_at?: string
           user_id?: string
         }
