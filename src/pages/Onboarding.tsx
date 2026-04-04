@@ -114,6 +114,17 @@ const Onboarding = () => {
   const [checkingBot, setCheckingBot] = useState<string | null>(null);
   const [selectedGuild, setSelectedGuild] = useState<string | null>(null);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  const [discordClientId, setDiscordClientId] = useState<string | null>(null);
+
+  // Fetch Discord client ID on mount
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/discord-oauth`, {
+      headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+    })
+      .then((r) => r.json())
+      .then((d) => setDiscordClientId(d.client_id))
+      .catch(() => {});
+  }, []);
 
   // Handle Discord OAuth callback
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -153,9 +164,10 @@ const Onboarding = () => {
   };
 
   const handleConnectDiscord = () => {
+    if (!discordClientId) return;
     const redirectUri = encodeURIComponent(getDiscordRedirectUri());
     const scope = encodeURIComponent("identify guilds");
-    const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
+    const url = `https://discord.com/api/oauth2/authorize?client_id=${discordClientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
     window.location.href = url;
   };
 
