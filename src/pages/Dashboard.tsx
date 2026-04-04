@@ -53,12 +53,100 @@ const TIER_ORDER: Record<string, number> = {
   [TIERS.guildMaster.product_id]: 2,
 };
 
+interface Guild {
+  id: string;
+  name: string;
+  icon: string | null;
+}
+
 const Dashboard = () => {
   const { user, subscription, signOut, checkSubscription } = useAuth();
   const navigate = useNavigate();
   const [loadingPortal, setLoadingPortal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [switchingTier, setSwitchingTier] = useState<string | null>(null);
+
+  // Discord state
+  const [discordId, setDiscordId] = useState<string | null>(null);
+  const [guilds, setGuilds] = useState<Guild[]>([]);
+  const [selectedGuildId, setSelectedGuildId] = useState<string | null>(null);
+  const [botStatuses, setBotStatuses] = useState<Record<string, boolean>>({});
+  const [checkingBot, setCheckingBot] = useState<string | null>(null);
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  // Load profile data
+  useEffect(() => {
+    if (!user) return;
+    const load = async () => {
+      setProfileLoading(true);
+      const { data } = await supabase
+        .from("profiles")
+        .select("discord_id, discord_guilds, selected_guild_id")
+        .eq("user_id", user.id)
+        .single();
+      if (data) {
+        setDiscordId(data.discord_id);
+        setSelectedGuildId(data.selected_guild_id);
+        if (data.discord_guilds && Array.isArray(data.discord_guilds)) {
+          setGuilds(data.discord_guilds as unknown as Guild[]);
+        }
+      }
+      setProfileLoading(false);
+    };
+    load();
+  }, [user]);
+
+  const checkBotStatus = useCallback(async (guildId: string) => {
+    setCheckingBot(guildId);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bot-proxy?action=status&guild_id=${guildId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        }
+      );
+      const result = await res.json();
+      setBotStatuses((prev) => ({ ...prev, [guildId]: result.active === true }));
+    } catch {
+      setBotStatuses((prev) => ({ ...prev, [guildId]: false }));
+    } finally {
+      setCheckingBot(null);
+    }
+  }, []);
+
+  // Check bot statuses and fetch invite URL on mount
+  useEffect(() => {
+    if (guilds.length === 0) return;
+    guilds.forEach((g) => checkBotStatus(g.id));
+    // Fetch invite URL
+    fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bot-proxy?action=info`, {
+      headers: {
+        Authorization: `Bearer ${supabase.auth.getSession().then(() => "")}`,
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      },
+    }).catch(() => {});
+    const fetchInvite = async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bot-proxy?action=info`,
+          {
+            headers: {
+              Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            },
+          }
+        );
+        const data = await res.json();
+        if (data.invite_url) setInviteUrl(data.invite_url);
+      } catch {}
+    };
+    fetchInvite();
+  }, [guilds, checkBotStatus]);
 
   if (!user) {
     navigate("/auth");
