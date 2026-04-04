@@ -123,20 +123,16 @@ const Dashboard = () => {
   useEffect(() => {
     if (guilds.length === 0) return;
     guilds.forEach((g) => checkBotStatus(g.id));
-    // Fetch invite URL
-    fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bot-proxy?action=info`, {
-      headers: {
-        Authorization: `Bearer ${supabase.auth.getSession().then(() => "")}`,
-        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-      },
-    }).catch(() => {});
     const fetchInvite = async () => {
       try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token;
+        if (!token) return;
         const res = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bot-proxy?action=info`,
           {
             headers: {
-              Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+              Authorization: `Bearer ${token}`,
               apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
             },
           }
