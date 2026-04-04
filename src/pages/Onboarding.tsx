@@ -184,11 +184,6 @@ const Onboarding = () => {
   const checkBotStatus = useCallback(async (guildId: string) => {
     setCheckingBot(guildId);
     try {
-      const { data, error } = await supabase.functions.invoke("bot-proxy", {
-        body: {},
-        headers: {},
-      });
-      // Use query params approach via fetch
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bot-proxy?action=status&guild_id=${guildId}`,
         {
