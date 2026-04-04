@@ -196,11 +196,18 @@ const Onboarding = () => {
   const checkBotStatus = useCallback(async (guildId: string) => {
     setCheckingBot(guildId);
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) {
+        setBotStatuses((prev) => ({ ...prev, [guildId]: false }));
+        return;
+      }
+
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bot-proxy?action=status&guild_id=${guildId}`,
         {
           headers: {
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
@@ -224,7 +231,6 @@ const Onboarding = () => {
   useEffect(() => {
     if (step === 1 && guilds.length > 0) {
       checkAllBotStatuses();
-      // Also fetch invite URL
       fetchInviteUrl();
     }
   }, [step, guilds]);
@@ -237,11 +243,15 @@ const Onboarding = () => {
 
   const fetchInviteUrl = async () => {
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) return;
+
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bot-proxy?action=info`,
         {
           headers: {
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
