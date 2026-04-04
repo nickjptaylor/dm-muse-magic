@@ -84,13 +84,22 @@ serve(async (req) => {
       newProduct: updated.items.data[0].price.product,
     });
 
+    // Handle current_period_end which may be a number (unix) or string
+    const periodEnd = updated.current_period_end;
+    let subscriptionEnd: string;
+    if (typeof periodEnd === "number") {
+      subscriptionEnd = new Date(periodEnd * 1000).toISOString();
+    } else if (typeof periodEnd === "string") {
+      subscriptionEnd = new Date(periodEnd).toISOString();
+    } else {
+      subscriptionEnd = new Date().toISOString();
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         product_id: updated.items.data[0].price.product,
-        subscription_end: new Date(
-          updated.current_period_end * 1000
-        ).toISOString(),
+        subscription_end: subscriptionEnd,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
