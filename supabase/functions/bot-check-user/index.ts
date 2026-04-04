@@ -183,7 +183,8 @@ serve(async (req) => {
       limits: {},
     };
 
-    const endTimestamp = Number(subscription.current_period_end);
+    const item = subscription.items.data[0] as any;
+    const endTimestamp = Number(item.current_period_end);
     const subscriptionEnd =
       !isNaN(endTimestamp) && endTimestamp > 0
         ? new Date(endTimestamp * 1000).toISOString()
