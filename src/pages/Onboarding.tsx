@@ -115,13 +115,8 @@ const Onboarding = () => {
   const [selectedGuild, setSelectedGuild] = useState<string | null>(null);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
 
-  // Redirect if not logged in
-  if (!user) {
-    navigate("/auth?mode=signup");
-    return null;
-  }
-
   // Handle Discord OAuth callback
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const code = searchParams.get("code");
     if (code && !discordConnected) {
