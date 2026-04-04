@@ -8,9 +8,15 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  // GET: return client_id for the frontend
+  if (req.method === "GET") {
+    const clientId = Deno.env.get("DISCORD_CLIENT_ID") || "";
+    return new Response(JSON.stringify({ client_id: clientId }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
