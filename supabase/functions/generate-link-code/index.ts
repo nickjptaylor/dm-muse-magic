@@ -1,6 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { corsHeaders } from "npm:@supabase/supabase-js/cors";
 
+const LINK_CODE_URL = "https://api.tavernrecap.com/api/link/generate";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -21,16 +23,21 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user?.email) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { discord_user_id } = await req.json();
-    if (!discord_user_id) {
+    const body = await req.json();
+    const discordUserId = body?.discord_user_id;
+    if (!discordUserId) {
       return new Response(JSON.stringify({ error: "Missing discord_user_id" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -46,7 +53,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const res = await fetch("https://api.tavernrecap.com/api/link/generate", {
+    const upstreamResponse = await fetch(LINK_CODE_URL, {
       method: "POST",
       headers: {
         "x-bot-api-key": botApiKey,
@@ -54,20 +61,39 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         email: user.email,
-        discord_user_id: discord_user_id,
+        discord_user_id: discordUserId,
       }),
     });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error("Link generate failed:", res.status, errText);
-      return new Response(JSON.stringify({ error: "Failed to generate link code" }), {
-        status: res.status,
+    if (!upstreamResponse.ok) {
+      const upstreamText = await upstreamResponse.text();
+      console.error("Link generate failed:", upstreamResponse.status, upstreamText);
+
+      const errorMessage = upstreamResponse.status === 404
+        ? "The TavernRecap link code endpoint is not available yet."
+        : "Failed to generate link code.";
+
+      return new Response(
+        JSON.stringify({
+          error: errorMessage,
+          upstream_status: upstreamResponse.status,
+        }),
+        {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const data = await upstreamResponse.json();
+    if (!data?.code) {
+      console.error("Link generate succeeded without code:", data);
+      return new Response(JSON.stringify({ error: "No link code was returned by the backend." }), {
+        status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const data = await res.json();
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
