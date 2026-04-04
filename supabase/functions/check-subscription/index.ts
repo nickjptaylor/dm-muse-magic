@@ -82,9 +82,14 @@ serve(async (req) => {
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
-      const endTimestamp = Number(subscription.current_period_end);
-      if (!isNaN(endTimestamp) && endTimestamp > 0) {
-        subscriptionEnd = new Date(endTimestamp * 1000).toISOString();
+      log("Raw subscription data", { 
+        current_period_end: subscription.current_period_end,
+        type: typeof subscription.current_period_end 
+      });
+      // current_period_end is a Unix timestamp (seconds)
+      const endTimestamp = subscription.current_period_end;
+      if (endTimestamp) {
+        subscriptionEnd = new Date(Number(endTimestamp) * 1000).toISOString();
       }
       productId = subscription.items.data[0].price.product;
     }
