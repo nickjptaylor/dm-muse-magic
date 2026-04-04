@@ -437,7 +437,7 @@ const Onboarding = () => {
       <div className="text-center">
         <h2 className="text-3xl font-display text-gold-gradient mb-2">Add Bot to Your Server</h2>
         <p className="text-muted-foreground">
-          Select the server you want to use and make sure the TavernRecap bot is added
+          Pick the server where you want TavernRecap, then add the bot to it
         </p>
       </div>
 
@@ -479,29 +479,18 @@ const Onboarding = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-foreground font-display truncate">{guild.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {isActive ? (
-                        <span className="text-green-500 flex items-center gap-1">
-                          <Check className="w-3 h-3" /> Bot Active
-                        </span>
-                      ) : (
-                        "Bot not added"
-                      )}
-                    </p>
+                    {isSelected && (
+                      <p className="text-xs text-gold">Selected for TavernRecap</p>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    {isSelected && (
-                      <span className="text-xs text-gold font-display bg-gold/10 px-2 py-1 rounded">
-                        Selected
-                      </span>
-                    )}
-                    {isActive ? (
+                    {isSelected && isActive ? (
                       <span className="text-xs text-green-500 font-display flex items-center gap-1 bg-green-500/10 px-3 py-1.5 rounded">
-                        <Check className="w-3 h-3" /> Bot Active
+                        <Check className="w-3 h-3" /> Bot Ready
                       </span>
-                    ) : isChecking ? (
+                    ) : isSelected && isChecking ? (
                       <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                    ) : (
+                    ) : isSelected && !isActive ? (
                       <Button
                         variant="heroOutline"
                         size="sm"
@@ -512,7 +501,7 @@ const Onboarding = () => {
                       >
                         Add Bot <ExternalLink className="w-3 h-3 ml-1" />
                       </Button>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               );

@@ -468,13 +468,13 @@ const Dashboard = () => {
                       )}
                     </div>
                     <div className="flex-shrink-0">
-                      {isActive ? (
+                      {isSelected && isActive ? (
                         <span className="text-xs text-green-500 flex items-center gap-1 bg-green-500/10 px-2 py-1 rounded">
                           <Check className="w-3 h-3" /> Bot Active
                         </span>
-                      ) : isChecking ? (
+                      ) : isSelected && isChecking ? (
                         <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                      ) : (
+                      ) : isSelected && !isActive ? (
                         <Button
                           variant="heroOutline"
                           size="sm"
@@ -488,7 +488,7 @@ const Dashboard = () => {
                         >
                           Add Bot <ExternalLink className="w-3 h-3 ml-1" />
                         </Button>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                 );
