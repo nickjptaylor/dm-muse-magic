@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth, TIERS } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,12 +20,12 @@ import {
   Terminal,
   Users,
   Gamepad2,
+  Copy,
+  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 
-// Remove hardcoded client ID - fetched from edge function
-
-const STEPS = ["Connect Discord", "Add Bot to Server", "Choose Plan", "You're Ready!"];
+const STEPS = ["Connect Discord", "Add Bot & Link", "Choose Plan", "You're Ready!"];
 
 interface Guild {
   id: string;
@@ -107,6 +107,7 @@ const Onboarding = () => {
   const [discordLoading, setDiscordLoading] = useState(false);
   const [discordConnected, setDiscordConnected] = useState(false);
   const [discordUsername, setDiscordUsername] = useState<string | null>(null);
+  const [discordId, setDiscordId] = useState<string | null>(null);
   const [guilds, setGuilds] = useState<Guild[]>([]);
 
   // Bot state
@@ -115,6 +116,13 @@ const Onboarding = () => {
   const [selectedGuild, setSelectedGuild] = useState<string | null>(null);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [discordClientId, setDiscordClientId] = useState<string | null>(null);
+
+  // Link code state
+  const [linkCode, setLinkCode] = useState<string | null>(null);
+  const [linkCodeLoading, setLinkCodeLoading] = useState(false);
+  const [linkCodeCopied, setLinkCodeCopied] = useState(false);
+  const [accountLinked, setAccountLinked] = useState(false);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Fetch Discord client ID on mount
   useEffect(() => {
@@ -148,6 +156,7 @@ const Onboarding = () => {
       if (data?.discord_id) {
         setDiscordConnected(true);
         setDiscordUsername(data.discord_id);
+        setDiscordId(data.discord_id);
         if (data.discord_guilds && Array.isArray(data.discord_guilds)) {
           setGuilds(data.discord_guilds as unknown as Guild[]);
         }
@@ -158,6 +167,15 @@ const Onboarding = () => {
     };
     loadProfile();
   }, [user]);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
+  }, []);
 
   const getDiscordRedirectUri = () => {
     return `${window.location.origin}/onboarding`;
@@ -181,6 +199,7 @@ const Onboarding = () => {
 
       setDiscordConnected(true);
       setDiscordUsername(data.discord_username);
+      setDiscordId(data.discord_id);
       setGuilds(data.guilds || []);
       toast.success("Discord connected successfully!");
       // Clean URL
@@ -269,7 +288,6 @@ const Onboarding = () => {
   const handleAddBot = (guildId: string) => {
     if (inviteUrl) {
       window.open(inviteUrl, "_blank");
-      // Poll for bot status after opening invite
       setTimeout(() => checkBotStatus(guildId), 5000);
       setTimeout(() => checkBotStatus(guildId), 15000);
     } else {
@@ -280,12 +298,16 @@ const Onboarding = () => {
   const handleSelectGuild = async (guildId: string) => {
     setSelectedGuild(guildId);
     try {
-      const res = await fetch(
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) return;
+
+      await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bot-proxy?action=select-guild&guild_id=${guildId}`,
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
@@ -293,6 +315,86 @@ const Onboarding = () => {
       );
     } catch {
       console.error("Failed to save selected guild");
+    }
+  };
+
+  const generateLinkCode = async () => {
+    if (!discordId) {
+      toast.error("Discord not connected. Please go back and connect Discord first.");
+      return;
+    }
+    setLinkCodeLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-link-code", {
+        body: { discord_user_id: discordId },
+      });
+      if (error) throw error;
+      if (data?.code) {
+        setLinkCode(data.code);
+        // Start polling for link completion
+        startLinkPolling();
+      } else {
+        toast.error("Failed to generate link code. Please try again.");
+      }
+    } catch (err) {
+      console.error("Link code generation error:", err);
+      toast.error("Failed to generate link code. Please try again.");
+    } finally {
+      setLinkCodeLoading(false);
+    }
+  };
+
+  const startLinkPolling = () => {
+    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    
+    let attempts = 0;
+    const maxAttempts = 60; // 10 minutes at 10s intervals
+    
+    pollIntervalRef.current = setInterval(async () => {
+      attempts++;
+      if (attempts >= maxAttempts || !selectedGuild) {
+        if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+        return;
+      }
+
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token;
+        if (!token) return;
+
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bot-proxy?action=status&guild_id=${selectedGuild}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            },
+          }
+        );
+        const result = await res.json();
+        if (result.linked === true || result.account_linked === true) {
+          setAccountLinked(true);
+          if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+          toast.success("Account linked successfully!");
+          setTimeout(() => setStep(2), 1500);
+        }
+      } catch {
+        // Silently continue polling
+      }
+    }, 10000);
+  };
+
+  const handleCopyCode = async () => {
+    if (!linkCode) return;
+    const command = `/account link ${linkCode}`;
+    try {
+      await navigator.clipboard.writeText(command);
+      setLinkCodeCopied(true);
+      toast.success("Command copied to clipboard!");
+      setTimeout(() => setLinkCodeCopied(false), 3000);
+    } catch {
+      toast.error("Failed to copy. Please copy manually.");
     }
   };
 
@@ -441,119 +543,198 @@ const Onboarding = () => {
     </div>
   );
 
-  // Step 2: Add Bot to Server
-  const renderBotStep = () => (
-    <div className="max-w-2xl mx-auto space-y-8">
-      <div className="text-center">
-        <h2 className="text-3xl font-display text-gold-gradient mb-2">Add Bot to Your Server</h2>
-        <p className="text-muted-foreground">
-          Pick the server where you want TavernRecap, then add the bot to it
-        </p>
-      </div>
+  // Step 2: Add Bot to Server & Link Account
+  const renderBotStep = () => {
+    const selectedGuildHasBot = selectedGuild && botStatuses[selectedGuild] === true;
+    const showLinkSection = selectedGuildHasBot;
 
-      {guilds.length === 0 ? (
-        <div className="rounded-lg border border-gold-subtle bg-card p-8 text-center space-y-4">
-          <p className="text-muted-foreground">No Discord servers found.</p>
-          <p className="text-sm text-muted-foreground">
-            Connect your Discord account first to see your servers.
+    return (
+      <div className="max-w-2xl mx-auto space-y-8">
+        <div className="text-center">
+          <h2 className="text-3xl font-display text-gold-gradient mb-2">Set Up Your Server</h2>
+          <p className="text-muted-foreground">
+            Pick your server, add the bot, then link your account
           </p>
-          <Button variant="heroOutline" onClick={() => setStep(0)}>
-            <ChevronLeft className="w-4 h-4 mr-1" /> Back to Discord
-          </Button>
         </div>
-      ) : (
-        <>
-          <div className="space-y-3">
-            {guilds.map((guild) => {
-              const isActive = botStatuses[guild.id] === true;
-              const isChecking = checkingBot === guild.id;
-              const isSelected = selectedGuild === guild.id;
-              const iconUrl = guildIconUrl(guild);
 
-              return (
-                <div
-                  key={guild.id}
-                  className={`rounded-lg border p-4 flex items-center gap-4 transition-all cursor-pointer ${
-                    isSelected
-                      ? "border-gold/50 bg-gold/5 ring-1 ring-gold/30"
-                      : "border-gold-subtle bg-card hover:border-gold/30"
-                  }`}
-                  onClick={() => handleSelectGuild(guild.id)}
-                >
-                  <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center overflow-hidden flex-shrink-0">
-                    {iconUrl ? (
-                      <img src={iconUrl} alt={guild.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <Users className="w-5 h-5 text-muted-foreground" />
-                    )}
+        {guilds.length === 0 ? (
+          <div className="rounded-lg border border-gold-subtle bg-card p-8 text-center space-y-4">
+            <p className="text-muted-foreground">No Discord servers found.</p>
+            <p className="text-sm text-muted-foreground">
+              Connect your Discord account first to see your servers.
+            </p>
+            <Button variant="heroOutline" onClick={() => setStep(0)}>
+              <ChevronLeft className="w-4 h-4 mr-1" /> Back to Discord
+            </Button>
+          </div>
+        ) : (
+          <>
+            {/* Server Selection */}
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground font-display">Select your server</p>
+              {guilds.map((guild) => {
+                const isActive = botStatuses[guild.id] === true;
+                const isChecking = checkingBot === guild.id;
+                const isSelected = selectedGuild === guild.id;
+                const iconUrl = guildIconUrl(guild);
+
+                return (
+                  <div
+                    key={guild.id}
+                    className={`rounded-lg border p-4 flex items-center gap-4 transition-all cursor-pointer ${
+                      isSelected
+                        ? "border-gold/50 bg-gold/5 ring-1 ring-gold/30"
+                        : "border-gold-subtle bg-card hover:border-gold/30"
+                    }`}
+                    onClick={() => handleSelectGuild(guild.id)}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {iconUrl ? (
+                        <img src={iconUrl} alt={guild.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <Users className="w-5 h-5 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-foreground font-display truncate">{guild.name}</p>
+                      {isSelected && (
+                        <p className="text-xs text-gold">Selected for TavernRecap</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {isSelected && isActive ? (
+                        <span className="text-xs text-green-500 font-display flex items-center gap-1 bg-green-500/10 px-3 py-1.5 rounded">
+                          <Check className="w-3 h-3" /> Bot Added
+                        </span>
+                      ) : isSelected && isChecking ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                      ) : isSelected && !isActive ? (
+                        <Button
+                          variant="heroOutline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddBot(guild.id);
+                          }}
+                        >
+                          Add Bot <ExternalLink className="w-3 h-3 ml-1" />
+                        </Button>
+                      ) : null}
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-foreground font-display truncate">{guild.name}</p>
-                    {isSelected && (
-                      <p className="text-xs text-gold">Selected for TavernRecap</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {isSelected && isActive ? (
-                      <span className="text-xs text-green-500 font-display flex items-center gap-1 bg-green-500/10 px-3 py-1.5 rounded">
-                        <Check className="w-3 h-3" /> Bot Ready
-                      </span>
-                    ) : isSelected && isChecking ? (
-                      <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                    ) : isSelected && !isActive ? (
-                      <Button
-                        variant="heroOutline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddBot(guild.id);
-                        }}
-                      >
-                        Add Bot <ExternalLink className="w-3 h-3 ml-1" />
-                      </Button>
-                    ) : null}
-                  </div>
+                );
+              })}
+            </div>
+
+            {/* Link Account Section */}
+            {showLinkSection && (
+              <div className="rounded-lg border border-gold-subtle bg-card p-6 space-y-5">
+                <div className="text-center">
+                  <h3 className="font-display text-xl text-foreground mb-1">Link Your Account</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Connect your website account to the Discord bot
+                  </p>
                 </div>
-              );
-            })}
-          </div>
 
-          <div className="flex justify-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={checkAllBotStatuses}
-              className="text-muted-foreground"
-            >
-              <RefreshCw className="w-4 h-4 mr-1" /> Refresh bot status
-            </Button>
-          </div>
+                {accountLinked ? (
+                  <div className="flex flex-col items-center gap-3 py-4">
+                    <div className="w-14 h-14 rounded-full bg-green-500/10 flex items-center justify-center">
+                      <Check className="w-7 h-7 text-green-500" />
+                    </div>
+                    <p className="text-green-500 font-display">Account Linked!</p>
+                  </div>
+                ) : linkCode ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground text-center">
+                      Type this command in your Discord server:
+                    </p>
+                    <button
+                      onClick={handleCopyCode}
+                      className="w-full group rounded-lg border-2 border-dashed border-gold/30 bg-gold/5 hover:border-gold/50 hover:bg-gold/10 p-6 transition-all cursor-pointer"
+                    >
+                      <code className="text-2xl md:text-3xl font-mono font-bold text-gold tracking-wider block text-center">
+                        /account link {linkCode}
+                      </code>
+                      <div className="flex items-center justify-center gap-1.5 mt-3 text-xs text-muted-foreground group-hover:text-gold transition-colors">
+                        {linkCodeCopied ? (
+                          <>
+                            <Check className="w-3.5 h-3.5" /> Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" /> Click to copy
+                          </>
+                        )}
+                      </div>
+                    </button>
+                    <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>This code expires in 10 minutes</span>
+                    </div>
+                    <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <span>Waiting for link confirmation...</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-4">
+                    <p className="text-sm text-muted-foreground text-center max-w-sm">
+                      Generate a one-time code, then paste the command in your Discord server to link your account
+                    </p>
+                    <Button
+                      variant="hero"
+                      onClick={generateLinkCode}
+                      disabled={linkCodeLoading}
+                    >
+                      {linkCodeLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : (
+                        <Terminal className="w-4 h-4 mr-2" />
+                      )}
+                      Generate Link Code
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
 
-          <div className="flex gap-3">
-            <Button variant="heroOutline" onClick={() => setStep(0)} className="flex items-center gap-1">
-              <ChevronLeft className="w-4 h-4" /> Back
-            </Button>
-            <Button
-              variant="hero"
-              className="flex-1 flex items-center justify-center gap-1"
-              onClick={() => setStep(2)}
-            >
-              Continue <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </>
-      )}
+            <div className="flex justify-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={checkAllBotStatuses}
+                className="text-muted-foreground"
+              >
+                <RefreshCw className="w-4 h-4 mr-1" /> Refresh bot status
+              </Button>
+            </div>
 
-      {guilds.length > 0 && (
-        <button
-          onClick={() => setStep(2)}
-          className="block mx-auto text-sm text-muted-foreground hover:text-gold transition-colors font-display"
-        >
-          Skip for now
-        </button>
-      )}
-    </div>
-  );
+            <div className="flex gap-3">
+              <Button variant="heroOutline" onClick={() => setStep(0)} className="flex items-center gap-1">
+                <ChevronLeft className="w-4 h-4" /> Back
+              </Button>
+              <Button
+                variant="hero"
+                className="flex-1 flex items-center justify-center gap-1"
+                onClick={() => setStep(2)}
+              >
+                Continue <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </>
+        )}
+
+        {guilds.length > 0 && (
+          <button
+            onClick={() => setStep(2)}
+            className="block mx-auto text-sm text-muted-foreground hover:text-gold transition-colors font-display"
+          >
+            Skip for now
+          </button>
+        )}
+      </div>
+    );
+  };
 
   // Step 3: Choose Plan
   const renderPlanStep = () => (
