@@ -393,48 +393,132 @@ const Dashboard = () => {
 
         {/* Discord Bot Card */}
         <div className="rounded-lg border border-gold-subtle bg-card p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-lg bg-gold/10 flex items-center justify-center">
-              <Settings className="w-6 h-6 text-gold" />
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-lg bg-gold/10 flex items-center justify-center">
+                <MessageSquare className="w-6 h-6 text-gold" />
+              </div>
+              <div>
+                <h2 className="font-display text-xl text-foreground">Discord Bot</h2>
+                <p className="text-sm text-muted-foreground">
+                  {discordId ? (
+                    <>Connected as <span className="text-gold">{discordId}</span></>
+                  ) : (
+                    "Not connected"
+                  )}
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="font-display text-xl text-foreground">Discord Bot Setup</h2>
-              <p className="text-sm text-muted-foreground">
-                Configure how TavernRecap connects to your server
+            {!discordId && (
+              <Button
+                variant="hero"
+                size="sm"
+                onClick={() => navigate("/onboarding")}
+              >
+                Connect Discord
+              </Button>
+            )}
+          </div>
+
+          {profileLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : discordId && guilds.length > 0 ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-muted-foreground font-display">Your Servers</p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => guilds.forEach((g) => checkBotStatus(g.id))}
+                  className="text-muted-foreground text-xs"
+                >
+                  <RefreshCw className="w-3 h-3 mr-1" /> Refresh
+                </Button>
+              </div>
+              {guilds.map((guild) => {
+                const isActive = botStatuses[guild.id] === true;
+                const isChecking = checkingBot === guild.id;
+                const isSelected = selectedGuildId === guild.id;
+                const iconUrl = guild.icon
+                  ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`
+                  : null;
+
+                return (
+                  <div
+                    key={guild.id}
+                    className={`rounded-lg border p-3 flex items-center gap-3 transition-all ${
+                      isSelected
+                        ? "border-gold/50 bg-gold/5"
+                        : "border-gold-subtle bg-secondary/30"
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {iconUrl ? (
+                        <img src={iconUrl} alt={guild.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <Users className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-foreground font-display truncate">{guild.name}</p>
+                      {isSelected && (
+                        <p className="text-xs text-gold">Active Server</p>
+                      )}
+                    </div>
+                    <div className="flex-shrink-0">
+                      {isActive ? (
+                        <span className="text-xs text-green-500 flex items-center gap-1 bg-green-500/10 px-2 py-1 rounded">
+                          <Check className="w-3 h-3" /> Bot Active
+                        </span>
+                      ) : isChecking ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                      ) : (
+                        <Button
+                          variant="heroOutline"
+                          size="sm"
+                          className="text-xs h-7"
+                          onClick={() => {
+                            if (inviteUrl) {
+                              window.open(inviteUrl, "_blank");
+                              setTimeout(() => checkBotStatus(guild.id), 5000);
+                            }
+                          }}
+                        >
+                          Add Bot <ExternalLink className="w-3 h-3 ml-1" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : discordId ? (
+            <p className="text-sm text-muted-foreground py-4">No servers found. Try reconnecting Discord.</p>
+          ) : (
+            <div className="px-4 py-6 rounded-md bg-secondary/30 text-center">
+              <p className="text-sm text-muted-foreground mb-3">
+                Connect your Discord account to set up the TavernRecap bot in your server
               </p>
+              <Button variant="heroOutline" size="sm" onClick={() => navigate("/onboarding")}>
+                Set Up Discord
+              </Button>
             </div>
-          </div>
+          )}
 
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-3 rounded-md bg-secondary/50">
-              <MessageSquare className="w-4 h-4 text-gold flex-shrink-0" />
-              <div>
-                <p className="text-sm text-foreground">Discord Server</p>
-                <p className="text-xs text-muted-foreground">Not connected yet</p>
-              </div>
+          {discordId && (
+            <div className="mt-4 flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground"
+                onClick={() => navigate("/onboarding")}
+              >
+                <Unlink className="w-3 h-3 mr-1" /> Reconnect Discord
+              </Button>
             </div>
-            <div className="flex items-center gap-3 p-3 rounded-md bg-secondary/50">
-              <Volume2 className="w-4 h-4 text-gold flex-shrink-0" />
-              <div>
-                <p className="text-sm text-foreground">Voice Channel</p>
-                <p className="text-xs text-muted-foreground">Not configured</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 rounded-md bg-secondary/50">
-              <Hash className="w-4 h-4 text-gold flex-shrink-0" />
-              <div>
-                <p className="text-sm text-foreground">Recap Channel</p>
-                <p className="text-xs text-muted-foreground">Not configured</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 px-4 py-3 rounded-md bg-gold/5 border border-gold/10">
-            <p className="text-sm text-muted-foreground">
-              <span className="text-gold font-display">Coming Soon:</span> Full Discord bot
-              integration with one-click setup. Stay tuned!
-            </p>
-          </div>
+          )}
         </div>
       </main>
     </div>
