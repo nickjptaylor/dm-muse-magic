@@ -217,6 +217,12 @@ const Onboarding = () => {
     }
   }, [step, guilds]);
 
+  // Redirect if not logged in (after all hooks)
+  if (!user) {
+    navigate("/auth?mode=signup");
+    return null;
+  }
+
   const fetchInviteUrl = async () => {
     try {
       const res = await fetch(
