@@ -81,10 +81,18 @@ serve(async (req) => {
     let subscriptionEnd = null;
 
     if (hasActiveSub) {
-      const subscription = subscriptions.data[0];
-      const endTimestamp = Number(subscription.current_period_end);
-      if (!isNaN(endTimestamp) && endTimestamp > 0) {
-        subscriptionEnd = new Date(endTimestamp * 1000).toISOString();
+      const subscription = subscriptions.data[0] as any;
+      log("Full subscription keys", Object.keys(subscription));
+      log("Subscription period fields", {
+        current_period_end: subscription.current_period_end,
+        currentPeriodEnd: subscription.currentPeriodEnd,
+        ended_at: subscription.ended_at,
+        cancel_at: subscription.cancel_at,
+      });
+      // Try multiple possible property names
+      const endTimestamp = subscription.current_period_end ?? subscription.currentPeriodEnd;
+      if (endTimestamp) {
+        subscriptionEnd = new Date(Number(endTimestamp) * 1000).toISOString();
       }
       productId = subscription.items.data[0].price.product;
     }
