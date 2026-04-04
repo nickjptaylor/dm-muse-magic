@@ -81,13 +81,16 @@ serve(async (req) => {
     let subscriptionEnd = null;
 
     if (hasActiveSub) {
-      const subscription = subscriptions.data[0];
-      log("Raw subscription data", { 
+      const subscription = subscriptions.data[0] as any;
+      log("Full subscription keys", Object.keys(subscription));
+      log("Subscription period fields", {
         current_period_end: subscription.current_period_end,
-        type: typeof subscription.current_period_end 
+        currentPeriodEnd: subscription.currentPeriodEnd,
+        ended_at: subscription.ended_at,
+        cancel_at: subscription.cancel_at,
       });
-      // current_period_end is a Unix timestamp (seconds)
-      const endTimestamp = subscription.current_period_end;
+      // Try multiple possible property names
+      const endTimestamp = subscription.current_period_end ?? subscription.currentPeriodEnd;
       if (endTimestamp) {
         subscriptionEnd = new Date(Number(endTimestamp) * 1000).toISOString();
       }
