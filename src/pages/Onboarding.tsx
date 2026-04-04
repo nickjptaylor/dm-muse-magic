@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const DISCORD_CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID;
+// Remove hardcoded client ID - fetched from edge function
 
 const STEPS = ["Connect Discord", "Add Bot to Server", "Choose Plan", "You're Ready!"];
 
