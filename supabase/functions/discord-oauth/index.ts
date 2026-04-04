@@ -17,6 +17,8 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -92,7 +94,7 @@ Deno.serve(async (req) => {
     );
 
     const guilds = Array.isArray(guildsData)
-      ? guildsData.map((g: any) => ({ id: g.id, name: g.name, icon: g.icon }))
+      ? guildsData.map((g: Record<string, unknown>) => ({ id: g.id, name: g.name, icon: g.icon }))
       : [];
 
     await adminClient
