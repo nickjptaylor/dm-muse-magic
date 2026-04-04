@@ -7,10 +7,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const log = (step: string, details?: any) => {
-  console.log(`[CHECK-SUB] ${step}`, details ? JSON.stringify(details) : '');
-};
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -35,29 +31,11 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
 
-    log("User authenticated", { userId: user.id, email: user.email });
-
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    
-    // Search by email
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    log("Stripe customer search by email", { 
-      email: user.email, 
-      found: customers.data.length,
-      customerIds: customers.data.map(c => c.id),
-      customerEmails: customers.data.map(c => c.email)
-    });
 
     if (customers.data.length === 0) {
-      // Fallback: list all customers and log for debugging
-      const allCustomers = await stripe.customers.list({ limit: 10 });
-      log("ALL customers for debugging", allCustomers.data.map(c => ({ id: c.id, email: c.email, name: c.name })));
-      
-      return new Response(JSON.stringify({ 
-        subscribed: false,
-        debug_email_searched: user.email,
-        debug_customers_found: 0
-      }), {
+      return new Response(JSON.stringify({ subscribed: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
@@ -70,31 +48,19 @@ serve(async (req) => {
       limit: 1,
     });
 
-    log("Subscriptions found", { 
-      customerId, 
-      activeCount: subscriptions.data.length,
-      subscriptions: subscriptions.data.map(s => ({ id: s.id, status: s.status, product: s.items.data[0]?.price?.product }))
-    });
-
     const hasActiveSub = subscriptions.data.length > 0;
     let productId = null;
     let subscriptionEnd = null;
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0] as any;
-      log("Full subscription keys", Object.keys(subscription));
-      log("Subscription period fields", {
-        current_period_end: subscription.current_period_end,
-        currentPeriodEnd: subscription.currentPeriodEnd,
-        ended_at: subscription.ended_at,
-        cancel_at: subscription.cancel_at,
-      });
-      // Try multiple possible property names
-      const endTimestamp = subscription.current_period_end ?? subscription.currentPeriodEnd;
+      const item = subscription.items.data[0];
+      productId = item.price.product;
+      // In API version 2025-08-27.basil, current_period_end is on the item, not the subscription
+      const endTimestamp = item.current_period_end;
       if (endTimestamp) {
         subscriptionEnd = new Date(Number(endTimestamp) * 1000).toISOString();
       }
-      productId = subscription.items.data[0].price.product;
     }
 
     return new Response(JSON.stringify({
@@ -107,7 +73,6 @@ serve(async (req) => {
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    log("ERROR", { message: errorMessage });
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
