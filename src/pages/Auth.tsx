@@ -27,7 +27,11 @@ const Auth = () => {
       .select("onboarding_completed")
       .eq("user_id", user.id)
       .single()
-      .then(({ data }) => {
+      .then(async ({ data, error }) => {
+        // If no profile exists, create one
+        if (error && error.code === "PGRST116") {
+          await supabase.from("profiles").insert({ user_id: user.id, display_name: user.email });
+        }
         if (isNewSignup || !data?.onboarding_completed) {
           navigate("/onboarding");
         } else {
