@@ -323,22 +323,28 @@ const Onboarding = () => {
       toast.error("Discord not connected. Please go back and connect Discord first.");
       return;
     }
+
     setLinkCodeLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-link-code", {
         body: { discord_user_id: discordId },
       });
-      if (error) throw error;
+
+      if (error) {
+        const message = typeof error.message === "string" ? error.message : "Failed to generate link code. Please try again.";
+        throw new Error(message);
+      }
+
       if (data?.code) {
         setLinkCode(data.code);
-        // Start polling for link completion
         startLinkPolling();
       } else {
-        toast.error("Failed to generate link code. Please try again.");
+        toast.error(data?.error || "Failed to generate link code. Please try again.");
       }
     } catch (err) {
       console.error("Link code generation error:", err);
-      toast.error("Failed to generate link code. Please try again.");
+      const message = err instanceof Error ? err.message : "Failed to generate link code. Please try again.";
+      toast.error(message);
     } finally {
       setLinkCodeLoading(false);
     }
