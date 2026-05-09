@@ -88,6 +88,28 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "leave" && guildId && req.method === "POST") {
+      const res = await fetch(`${BOT_API_BASE}/guild/${guildId}/leave`, {
+        method: "POST",
+        headers: { "x-bot-api-key": botApiKey },
+      });
+      const text = await res.text();
+      let data: unknown = {};
+      if (text) {
+        try { data = JSON.parse(text); } catch { data = { raw: text }; }
+      }
+      if (!res.ok) {
+        console.error("Bot leave request failed:", res.status, text);
+        return new Response(
+          JSON.stringify({ error: "Failed to remove bot from server", status: res.status, details: data }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      return new Response(JSON.stringify({ success: true, ...((data as object) ?? {}) }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: "Invalid action" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
