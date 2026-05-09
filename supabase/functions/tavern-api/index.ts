@@ -60,7 +60,26 @@ Deno.serve(async (req) => {
       init.body = await req.text();
     }
 
-    const res = await fetch(target, init);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
+    let res: Response;
+    try {
+      res = await fetch(target, { ...init, signal: controller.signal });
+    } catch (fetchErr) {
+      clearTimeout(timeoutId);
+      const isAbort = (fetchErr as Error)?.name === "AbortError";
+      console.error("tavern-api upstream fetch failed:", fetchErr);
+      return new Response(
+        JSON.stringify({
+          error: isAbort ? "Upstream timed out" : "Upstream unreachable",
+        }),
+        {
+          status: 504,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+    clearTimeout(timeoutId);
     const text = await res.text();
     return new Response(text || "{}", {
       status: res.status,
