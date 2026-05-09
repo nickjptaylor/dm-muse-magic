@@ -181,6 +181,15 @@ const Onboarding = () => {
     };
   }, []);
 
+  // Auto-generate link code once the bot is detected in the selected guild
+  useEffect(() => {
+    const hasBot = selectedGuild && botStatuses[selectedGuild] === true;
+    if (hasBot && !linkCode && !accountLinked && !linkCodeLoading) {
+      generateLinkCode();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedGuild, botStatuses, accountLinked]);
+
   const getDiscordRedirectUri = () => {
     return `${window.location.origin}/onboarding`;
   };
