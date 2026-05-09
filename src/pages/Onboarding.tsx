@@ -381,9 +381,11 @@ const Onboarding = () => {
         setLinkCode(data.code);
         startLinkPolling();
       } else {
+        linkCodeRequestedRef.current = false;
         toast.error(data?.error || "Failed to generate link code. Please try again.");
       }
     } catch (err) {
+      linkCodeRequestedRef.current = false;
       console.error("Link code generation error:", err);
       const message = err instanceof Error ? err.message : "Failed to generate link code. Please try again.";
       toast.error(message);
