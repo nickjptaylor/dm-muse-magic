@@ -469,15 +469,11 @@ const Onboarding = () => {
       if (error) throw error;
       if (data?.url) {
         window.open(data.url, "_blank");
-        toast.info("Complete checkout in the new tab, then come back here to continue.", {
+        toast.info("Complete checkout in the new tab. We'll unlock your plan as soon as payment is confirmed.", {
           duration: 10000,
         });
         setSelectedPlan(tierKey);
-        const poll = setInterval(async () => {
-          await checkSubscription();
-        }, 5000);
-        setTimeout(() => clearInterval(poll), 120000);
-        setStep(3);
+        setAwaitingPayment(true);
       }
     } catch {
       toast.error("Failed to start checkout. Please try again.");
