@@ -433,11 +433,10 @@ const Onboarding = () => {
 
   const handleCopyCode = async () => {
     if (!linkCode) return;
-    const command = `/account link ${linkCode}`;
     try {
-      await navigator.clipboard.writeText(command);
+      await navigator.clipboard.writeText(linkCode);
       setLinkCodeCopied(true);
-      toast.success("Command copied to clipboard!");
+      toast.success("Code copied to clipboard!");
       setTimeout(() => setLinkCodeCopied(false), 3000);
     } catch {
       toast.error("Failed to copy. Please copy manually.");
