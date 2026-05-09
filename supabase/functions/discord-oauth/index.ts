@@ -93,8 +93,21 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Only keep guilds the user can add a bot to (owner, ADMINISTRATOR, or MANAGE_GUILD).
+    const MANAGE_GUILD = 0x20n;
+    const ADMINISTRATOR = 0x8n;
     const guilds = Array.isArray(guildsData)
-      ? guildsData.map((g: Record<string, unknown>) => ({ id: g.id, name: g.name, icon: g.icon }))
+      ? guildsData
+          .filter((g: Record<string, unknown>) => {
+            if (g.owner === true) return true;
+            try {
+              const perms = BigInt((g.permissions as string) ?? "0");
+              return (perms & ADMINISTRATOR) !== 0n || (perms & MANAGE_GUILD) !== 0n;
+            } catch {
+              return false;
+            }
+          })
+          .map((g: Record<string, unknown>) => ({ id: g.id, name: g.name, icon: g.icon }))
       : [];
 
     await adminClient
