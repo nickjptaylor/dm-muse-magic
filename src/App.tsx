@@ -16,6 +16,7 @@ import CampaignDetail from "./pages/CampaignDetail";
 import Sessions from "./pages/Sessions";
 import SessionDetail from "./pages/SessionDetail";
 import DMPrep from "./pages/DMPrep";
+import Help from "./pages/Help";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/campaigns/:campaignId/sessions" element={<Sessions />} />
               <Route path="/campaigns/:campaignId/sessions/:sessionId" element={<SessionDetail />} />
               <Route path="/campaigns/:campaignId/dm-prep" element={<DMPrep />} />
+              <Route path="/help" element={<Help />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
