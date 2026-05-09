@@ -154,6 +154,14 @@ const Dashboard = () => {
       const { data, error } = await supabase.functions.invoke("discord-oauth", {
         body: { action: "refresh_guilds" },
       });
+      const errMsg =
+        (data as { error?: string } | null)?.error ||
+        (error ? error.message : null);
+      if (errMsg && /reconnect discord/i.test(errMsg)) {
+        toast.message("Reconnecting Discord to refresh your servers...");
+        navigate("/onboarding");
+        return;
+      }
       if (error) throw new Error(error.message || "Failed to refresh servers.");
       if (data?.guilds) {
         setGuilds(data.guilds as Guild[]);
