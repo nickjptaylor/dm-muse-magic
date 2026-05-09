@@ -123,6 +123,10 @@ const Onboarding = () => {
   const [linkCodeCopied, setLinkCodeCopied] = useState(false);
   const [accountLinked, setAccountLinked] = useState(false);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const selectedGuildRef = useRef<string | null>(null);
+  useEffect(() => {
+    selectedGuildRef.current = selectedGuild;
+  }, [selectedGuild]);
 
   // Fetch Discord client ID on mount
   useEffect(() => {
@@ -234,6 +238,15 @@ const Onboarding = () => {
       );
       const result = await res.json();
       setBotStatuses((prev) => ({ ...prev, [guildId]: result.active === true }));
+
+      // Keep account-linked state in sync for the currently selected guild
+      if (selectedGuildRef.current === guildId) {
+        const linked = result.linked === true || result.account_linked === true;
+        setAccountLinked(linked);
+        if (!linked) {
+          setLinkCode(null);
+        }
+      }
     } catch {
       setBotStatuses((prev) => ({ ...prev, [guildId]: false }));
     } finally {
