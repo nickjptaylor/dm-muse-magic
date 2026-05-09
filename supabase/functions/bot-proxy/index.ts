@@ -23,8 +23,11 @@ Deno.serve(async (req) => {
       if (text) {
         try { data = JSON.parse(text); } catch { data = { raw: text }; }
       }
+      if (!res.ok) {
+        console.error("Bot info request failed:", res.status, text);
+      }
       return new Response(JSON.stringify(data), {
-        status: res.ok ? 200 : res.status,
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

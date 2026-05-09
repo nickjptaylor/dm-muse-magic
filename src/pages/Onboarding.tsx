@@ -200,6 +200,9 @@ const Onboarding = () => {
         body: { code, redirect_uri: getDiscordRedirectUri() },
       });
       if (error) throw error;
+      if (!data?.discord_id) {
+        throw new Error(data?.error || "Failed to connect Discord. Please try again.");
+      }
 
       setDiscordConnected(true);
       setDiscordUsername(data.discord_username);

@@ -76,8 +76,12 @@ Deno.serve(async (req) => {
       const refreshToken = profile?.discord_refresh_token as string | undefined;
       if (profileErr || (!storedToken && !refreshToken)) {
         return new Response(
-          JSON.stringify({ error: "No Discord session. Please reconnect Discord." }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({
+            error: "No Discord session. Please reconnect Discord.",
+            requires_reconnect: true,
+            guilds: [],
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
@@ -123,13 +127,28 @@ Deno.serve(async (req) => {
         const refreshed = await tryRefresh();
         if (!refreshed) {
           return new Response(
-            JSON.stringify({ error: "Discord session expired. Please reconnect Discord." }),
-            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            JSON.stringify({
+              error: "Discord session expired. Please reconnect Discord.",
+              requires_reconnect: true,
+              guilds: [],
+            }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
         guildsRes = await fetch(`${DISCORD_API}/users/@me/guilds`, {
           headers: { Authorization: `Bearer ${storedToken}` },
         });
+      }
+
+      if (guildsRes.status === 401) {
+        return new Response(
+          JSON.stringify({
+            error: "Discord session expired. Please reconnect Discord.",
+            requires_reconnect: true,
+            guilds: [],
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
 
       if (!guildsRes.ok) {
