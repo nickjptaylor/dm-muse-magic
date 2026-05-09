@@ -319,15 +319,10 @@ const Onboarding = () => {
   };
 
   const generateLinkCode = async () => {
-    if (!discordId) {
-      toast.error("Discord not connected. Please go back and connect Discord first.");
-      return;
-    }
-
     setLinkCodeLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-link-code", {
-        body: { discord_user_id: discordId },
+        body: {},
       });
 
       if (error) {
