@@ -154,10 +154,12 @@ const Dashboard = () => {
       const { data, error } = await supabase.functions.invoke("discord-oauth", {
         body: { action: "refresh_guilds" },
       });
+      const reconnectRequested =
+        (data as { requires_reconnect?: boolean } | null)?.requires_reconnect === true;
       const errMsg =
         (data as { error?: string } | null)?.error ||
         (error ? error.message : null);
-      if (errMsg && /reconnect discord/i.test(errMsg)) {
+      if (reconnectRequested || (errMsg && /reconnect discord/i.test(errMsg))) {
         toast.message("Reconnecting Discord to refresh your servers...");
         navigate("/onboarding");
         return;
