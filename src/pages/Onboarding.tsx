@@ -707,14 +707,14 @@ const Onboarding = () => {
                 ) : linkCode ? (
                   <div className="space-y-4">
                     <p className="text-sm text-muted-foreground text-center">
-                      Type this command in your Discord server:
+                      Run <code className="text-gold">/link</code> in your Discord server and enter this code:
                     </p>
                     <button
                       onClick={handleCopyCode}
                       className="w-full group rounded-lg border-2 border-dashed border-gold/30 bg-gold/5 hover:border-gold/50 hover:bg-gold/10 p-6 transition-all cursor-pointer"
                     >
                       <code className="text-2xl md:text-3xl font-mono font-bold text-gold tracking-wider block text-center">
-                        /account link {linkCode}
+                        {linkCode}
                       </code>
                       <div className="flex items-center justify-center gap-1.5 mt-3 text-xs text-muted-foreground group-hover:text-gold transition-colors">
                         {linkCodeCopied ? (
