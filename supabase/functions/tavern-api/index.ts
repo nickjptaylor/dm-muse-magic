@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000);
+    const timeoutId = setTimeout(() => controller.abort(), 110000);
     let res: Response;
     try {
       res = await fetch(target, { ...init, signal: controller.signal });
