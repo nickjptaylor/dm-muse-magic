@@ -834,6 +834,34 @@ const Onboarding = () => {
         <h2 className="text-3xl font-display text-gold-gradient mb-2">Choose Your Path</h2>
         <p className="text-muted-foreground">Select the plan that fits your adventuring party</p>
       </div>
+      {awaitingPayment && (
+        <div className="max-w-2xl mx-auto rounded-lg border border-gold/40 bg-gold/5 p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+          <div className="flex items-center gap-3">
+            <Loader2 className="w-5 h-5 animate-spin text-gold" />
+            <div>
+              <p className="font-display text-foreground">Waiting for payment confirmation...</p>
+              <p className="text-xs text-muted-foreground">
+                Finish checkout in the Stripe tab. We'll unlock your plan automatically.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="heroOutline" size="sm" onClick={() => checkSubscription()}>
+              Check now
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setAwaitingPayment(false);
+                setSelectedPlan(null);
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 max-w-6xl mx-auto">
         {plans.map((plan) => {
           const Icon = plan.icon;
@@ -841,7 +869,7 @@ const Onboarding = () => {
             <button
               key={plan.name}
               onClick={() => handleSelectPlan(plan.tierKey)}
-              disabled={loadingCheckout}
+              disabled={loadingCheckout || awaitingPayment}
               className={`relative rounded-lg border p-6 text-left transition-all duration-300 hover:scale-[1.02] ${
                 plan.featured
                   ? "border-gold/40 bg-card glow-gold"
