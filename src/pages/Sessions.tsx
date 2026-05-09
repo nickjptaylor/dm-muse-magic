@@ -70,7 +70,7 @@ export default function Sessions() {
     return sessions.filter(
       (s) =>
         (s.title ?? "").toLowerCase().includes(q) ||
-        String(s.session_number).includes(q)
+        (s.session_number != null && String(s.session_number).includes(q))
     );
   }, [sessions, filter]);
 
@@ -124,10 +124,11 @@ export default function Sessions() {
                   <div className="flex items-start justify-between gap-3 flex-wrap">
                     <div>
                       <CardTitle className="font-display text-xl">
-                        {s.title || `Session #${s.session_number}`}
+                        {s.title || (s.session_number != null ? `Session #${s.session_number}` : "Untitled session")}
                       </CardTitle>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Session #{s.session_number} {formatDate(s.started_at || s.created_at)}
+                        {s.session_number != null && <>Session #{s.session_number} </>}
+                        {formatDate(s.started_at || s.created_at)}
                         {duration && (
                           <span className="inline-flex items-center gap-1 ml-2">
                             <Clock className="h-3 w-3" /> {duration}
