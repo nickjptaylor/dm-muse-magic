@@ -124,6 +124,7 @@ const Onboarding = () => {
   const [accountLinked, setAccountLinked] = useState(false);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const selectedGuildRef = useRef<string | null>(null);
+  const linkCodeRequestedRef = useRef(false);
   useEffect(() => {
     selectedGuildRef.current = selectedGuild;
   }, [selectedGuild]);
@@ -184,7 +185,8 @@ const Onboarding = () => {
   // Auto-generate link code once the bot is detected in the selected guild
   useEffect(() => {
     const hasBot = selectedGuild && botStatuses[selectedGuild] === true;
-    if (hasBot && !linkCode && !accountLinked && !linkCodeLoading) {
+    if (hasBot && !linkCode && !accountLinked && !linkCodeRequestedRef.current) {
+      linkCodeRequestedRef.current = true;
       generateLinkCode();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -379,9 +381,11 @@ const Onboarding = () => {
         setLinkCode(data.code);
         startLinkPolling();
       } else {
+        linkCodeRequestedRef.current = false;
         toast.error(data?.error || "Failed to generate link code. Please try again.");
       }
     } catch (err) {
+      linkCodeRequestedRef.current = false;
       console.error("Link code generation error:", err);
       const message = err instanceof Error ? err.message : "Failed to generate link code. Please try again.";
       toast.error(message);
