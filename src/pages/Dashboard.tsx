@@ -21,7 +21,7 @@ import {
   Unlink,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 
 const tiersList = [
   {
@@ -71,9 +71,17 @@ const Dashboard = () => {
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [selectedGuildId, setSelectedGuildId] = useState<string | null>(null);
   const [botStatuses, setBotStatuses] = useState<Record<string, boolean>>({});
+  const [accountLinkStatuses, setAccountLinkStatuses] = useState<Record<string, boolean>>({});
   const [checkingBot, setCheckingBot] = useState<string | null>(null);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+
+  const selectedGuild = useMemo(
+    () => guilds.find((guild) => guild.id === selectedGuildId) ?? null,
+    [guilds, selectedGuildId]
+  );
+  const selectedGuildBotActive = selectedGuildId ? botStatuses[selectedGuildId] === true : false;
+  const selectedGuildAccountLinked = selectedGuildId ? accountLinkStatuses[selectedGuildId] === true : false;
 
   // Load profile data
   useEffect(() => {
@@ -118,8 +126,13 @@ const Dashboard = () => {
       );
       const result = await res.json();
       setBotStatuses((prev) => ({ ...prev, [guildId]: result.active === true }));
+      setAccountLinkStatuses((prev) => ({
+        ...prev,
+        [guildId]: result.linked === true || result.account_linked === true,
+      }));
     } catch {
       setBotStatuses((prev) => ({ ...prev, [guildId]: false }));
+      setAccountLinkStatuses((prev) => ({ ...prev, [guildId]: false }));
     } finally {
       setCheckingBot(null);
     }
@@ -150,10 +163,13 @@ const Dashboard = () => {
     fetchInvite();
   }, [guilds, checkBotStatus]);
 
-  if (!user) {
-    navigate("/auth");
-    return null;
-  }
+  useEffect(() => {
+    if (!user) {
+      navigate("/auth");
+    }
+  }, [user, navigate]);
+
+  if (!user) return null;
 
   const currentTierName = subscription.subscribed
     ? subscription.productId === TIERS.guildMaster.product_id
@@ -404,11 +420,20 @@ const Dashboard = () => {
                 <h2 className="font-display text-xl text-foreground">Discord Bot</h2>
                 <p className="text-sm text-muted-foreground">
                   {discordId ? (
-                    <>Connected as <span className="text-gold">{discordId}</span></>
+                    <>
+                      Discord connected as <span className="text-gold">{discordId}</span>
+                    </>
                   ) : (
                     "Not connected"
                   )}
                 </p>
+                {selectedGuild && (
+                  <p className="text-sm text-muted-foreground">
+                    {selectedGuildAccountLinked
+                      ? `Account linked in ${selectedGuild.name}`
+                      : `Account not linked in ${selectedGuild.name}`}
+                  </p>
+                )}
               </div>
             </div>
             {!discordId && (
@@ -471,9 +496,14 @@ const Dashboard = () => {
                     </div>
                     <div className="flex-shrink-0">
                       {isSelected && isActive ? (
-                        <span className="text-xs text-green-500 flex items-center gap-1 bg-green-500/10 px-2 py-1 rounded">
-                          <Check className="w-3 h-3" /> Bot Active
-                        </span>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-xs text-green-500 flex items-center gap-1 bg-green-500/10 px-2 py-1 rounded">
+                            <Check className="w-3 h-3" /> Bot Active
+                          </span>
+                          <span className="text-[11px] text-muted-foreground">
+                            {selectedGuildAccountLinked ? "Account linked" : "Account not linked"}
+                          </span>
+                        </div>
                       ) : isSelected && isChecking ? (
                         <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                       ) : isSelected && !isActive ? (
