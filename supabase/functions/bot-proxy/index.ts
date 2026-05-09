@@ -18,8 +18,13 @@ Deno.serve(async (req) => {
       const res = await fetch(`${BOT_API_BASE}/info`, {
         headers: { "x-bot-api-key": botApiKey },
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data: unknown = {};
+      if (text) {
+        try { data = JSON.parse(text); } catch { data = { raw: text }; }
+      }
       return new Response(JSON.stringify(data), {
+        status: res.ok ? 200 : res.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
