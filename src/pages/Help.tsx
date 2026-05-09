@@ -118,7 +118,7 @@ export default function Help() {
                   {[
                     <><strong>Sign up</strong> at tavernrecap.com and choose a subscription.</>,
                     <><strong>Add the bot</strong> to your Discord server using the invite link.</>,
-                    <><strong>Link your account</strong> — the website gives you a one-time code (e.g. <Cmd>TR-7X4K</Cmd>). Type <Cmd>/account link TR-7X4K</Cmd> in Discord to connect your subscription to your server.</>,
+                    <><strong>Link your account</strong> — the website gives you a one-time code. Type <Cmd>/account link YOUR-CODE</Cmd> in Discord to connect your subscription to your server.</>,
                     <><strong>Create a campaign</strong> — type <Cmd>/campaign create name:"My Campaign"</Cmd>.</>,
                     <><strong>Set the DM</strong> — type <Cmd>/campaign setdm dm:@YourDM</Cmd>.</>,
                     <><strong>Register characters</strong> — each player types <Cmd>/character register name:"Thorin" race:"Dwarf" class:"Fighter" level:5</Cmd>.</>,
@@ -265,7 +265,7 @@ export default function Help() {
                   </table>
                 </div>
                 <div className="space-y-1 text-sm text-muted-foreground">
-                  <p>Link your account: get a code on the website, then type <Cmd>/account link TR-XXXX</Cmd> in Discord.</p>
+                  <p>Link your account: get a code on the website, then type <Cmd>/account link YOUR-CODE</Cmd> in Discord.</p>
                   <p>Check your tier: <Cmd>/account status</Cmd></p>
                 </div>
                 <Button asChild variant="outline" className="border-gold/50 text-gold hover:bg-gold/10">
