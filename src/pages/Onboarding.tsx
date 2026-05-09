@@ -581,7 +581,22 @@ const Onboarding = () => {
           <>
             {/* Server Selection */}
             <div className="space-y-3">
-              <p className="text-sm text-muted-foreground font-display">Select your server</p>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground font-display">Select your server</p>
+                <Button
+                  variant="heroOutline"
+                  size="sm"
+                  onClick={checkAllBotStatuses}
+                  disabled={checkingBot !== null}
+                >
+                  {checkingBot !== null ? (
+                    <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-3.5 h-3.5 mr-1" />
+                  )}
+                  Refresh bot status
+                </Button>
+              </div>
               {guilds.map((guild) => {
                 const isActive = botStatuses[guild.id] === true;
                 const isChecking = checkingBot === guild.id;
@@ -707,17 +722,6 @@ const Onboarding = () => {
                 )}
               </div>
             )}
-
-            <div className="flex justify-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={checkAllBotStatuses}
-                className="text-muted-foreground"
-              >
-                <RefreshCw className="w-4 h-4 mr-1" /> Refresh bot status
-              </Button>
-            </div>
 
             <div className="flex gap-3">
               <Button variant="heroOutline" onClick={() => setStep(0)} className="flex items-center gap-1">
