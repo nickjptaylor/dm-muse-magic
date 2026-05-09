@@ -35,15 +35,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    const body = await req.json();
-    const discordUserId = body?.discord_user_id;
-    if (!discordUserId) {
-      return new Response(JSON.stringify({ error: "Missing discord_user_id" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const botApiKey = Deno.env.get("BOT_API_KEY");
     if (!botApiKey) {
       console.error("BOT_API_KEY not configured");
@@ -61,7 +52,6 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         email: user.email,
-        discord_user_id: discordUserId,
       }),
     });
 
@@ -69,13 +59,9 @@ Deno.serve(async (req) => {
       const upstreamText = await upstreamResponse.text();
       console.error("Link generate failed:", upstreamResponse.status, upstreamText);
 
-      const errorMessage = upstreamResponse.status === 404
-        ? "The TavernRecap link code endpoint is not available yet."
-        : "Failed to generate link code.";
-
       return new Response(
         JSON.stringify({
-          error: errorMessage,
+          error: "Failed to generate link code.",
           upstream_status: upstreamResponse.status,
         }),
         {
