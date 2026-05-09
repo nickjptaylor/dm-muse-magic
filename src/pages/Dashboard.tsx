@@ -19,9 +19,12 @@ import {
   RefreshCw,
   Users,
   Unlink,
+  Copy,
+  Clock,
+  Terminal,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 
 const tiersList = [
   {
@@ -76,12 +79,73 @@ const Dashboard = () => {
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
+  // Account link state
+  const [linkCode, setLinkCode] = useState<string | null>(null);
+  const [linkCodeLoading, setLinkCodeLoading] = useState(false);
+  const [linkCodeCopied, setLinkCodeCopied] = useState(false);
+  const linkPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const selectedGuild = useMemo(
     () => guilds.find((guild) => guild.id === selectedGuildId) ?? null,
     [guilds, selectedGuildId]
   );
   const selectedGuildBotActive = selectedGuildId ? botStatuses[selectedGuildId] === true : false;
   const selectedGuildAccountLinked = selectedGuildId ? accountLinkStatuses[selectedGuildId] === true : false;
+
+  // Clear code & polling once linked
+  useEffect(() => {
+    if (selectedGuildAccountLinked && linkPollRef.current) {
+      clearInterval(linkPollRef.current);
+      linkPollRef.current = null;
+      if (linkCode) {
+        toast.success("Account linked successfully!");
+        setLinkCode(null);
+      }
+    }
+  }, [selectedGuildAccountLinked, linkCode]);
+
+  useEffect(() => {
+    return () => {
+      if (linkPollRef.current) clearInterval(linkPollRef.current);
+    };
+  }, []);
+
+  const generateLinkCode = async () => {
+    if (!selectedGuildId) return;
+    setLinkCodeLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-link-code", {
+        body: {},
+      });
+      if (error) throw new Error(error.message || "Failed to generate link code.");
+      if (data?.code) {
+        setLinkCode(data.code);
+        if (linkPollRef.current) clearInterval(linkPollRef.current);
+        linkPollRef.current = setInterval(() => {
+          if (selectedGuildId) checkBotStatus(selectedGuildId);
+        }, 10000);
+      } else {
+        toast.error(data?.error || "Failed to generate link code.");
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to generate link code.";
+      toast.error(message);
+    } finally {
+      setLinkCodeLoading(false);
+    }
+  };
+
+  const handleCopyLinkCommand = async () => {
+    if (!linkCode) return;
+    try {
+      await navigator.clipboard.writeText(`/account link ${linkCode}`);
+      setLinkCodeCopied(true);
+      toast.success("Command copied to clipboard!");
+      setTimeout(() => setLinkCodeCopied(false), 3000);
+    } catch {
+      toast.error("Failed to copy. Please copy manually.");
+    }
+  };
 
   // Load profile data
   useEffect(() => {
@@ -536,6 +600,59 @@ const Dashboard = () => {
               <Button variant="heroOutline" size="sm" onClick={() => navigate("/onboarding")}>
                 Set Up Discord
               </Button>
+            </div>
+          )}
+
+          {/* Account linking */}
+          {discordId && selectedGuild && selectedGuildBotActive && !selectedGuildAccountLinked && (
+            <div className="mt-4 rounded-lg border border-gold-subtle bg-secondary/30 p-4 space-y-3">
+              <div>
+                <p className="text-sm font-display text-foreground">Link your account in {selectedGuild.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  Generate a one-time code and run the command in your Discord server to link your account to the bot.
+                </p>
+              </div>
+              {linkCode ? (
+                <>
+                  <button
+                    onClick={handleCopyLinkCommand}
+                    className="w-full group rounded-lg border-2 border-dashed border-gold/30 bg-gold/5 hover:border-gold/50 hover:bg-gold/10 p-4 transition-all cursor-pointer"
+                  >
+                    <code className="text-lg md:text-xl font-mono font-bold text-gold tracking-wider block text-center">
+                      /account link {linkCode}
+                    </code>
+                    <div className="flex items-center justify-center gap-1.5 mt-2 text-xs text-muted-foreground group-hover:text-gold transition-colors">
+                      {linkCodeCopied ? (
+                        <><Check className="w-3.5 h-3.5" /> Copied!</>
+                      ) : (
+                        <><Copy className="w-3.5 h-3.5" /> Click to copy</>
+                      )}
+                    </div>
+                  </button>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5" /> Expires in 10 minutes
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Waiting for confirmation...
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <Button
+                  variant="hero"
+                  size="sm"
+                  onClick={generateLinkCode}
+                  disabled={linkCodeLoading}
+                >
+                  {linkCodeLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    <Terminal className="w-4 h-4 mr-2" />
+                  )}
+                  Generate Link Code
+                </Button>
+              )}
             </div>
           )}
 
