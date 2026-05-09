@@ -829,50 +829,6 @@ const Dashboard = () => {
               </Button>
             </div>
           )}
-
-          {discordId && (
-            <div className="mt-4 flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs text-muted-foreground"
-                disabled={reconnecting}
-                onClick={async () => {
-                  setReconnecting(true);
-                  try {
-                    const res = await fetch(
-                      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/discord-oauth`,
-                      { headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY } }
-                    );
-                    const { client_id } = await res.json();
-                    if (!client_id) throw new Error("Missing Discord client id");
-                    const topOrigin = (() => {
-                      try { return window.top?.location.origin || window.location.origin; }
-                      catch { return window.location.origin; }
-                    })();
-                    const redirectUri = encodeURIComponent(`${topOrigin}/onboarding`);
-                    const scope = encodeURIComponent("identify guilds");
-                    const url = `https://discord.com/api/oauth2/authorize?client_id=${client_id}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&prompt=consent`;
-                    try {
-                      if (window.top && window.top !== window.self) {
-                        window.top.location.href = url;
-                      } else {
-                        window.location.href = url;
-                      }
-                    } catch {
-                      window.open(url, "_blank", "noopener");
-                    }
-                  } catch (e) {
-                    toast.error("Failed to start Discord reconnect");
-                    setReconnecting(false);
-                  }
-                }}
-              >
-                <Unlink className="w-3 h-3 mr-1" />
-                {reconnecting ? "Redirecting..." : "Reconnect Discord"}
-              </Button>
-            </div>
-          )}
         </div>
       </main>
     </div>
