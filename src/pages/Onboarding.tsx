@@ -738,22 +738,9 @@ const Onboarding = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center gap-4">
-                    <p className="text-sm text-muted-foreground text-center max-w-sm">
-                      Generate a one-time code, then paste the command in your Discord server to link your account
-                    </p>
-                    <Button
-                      variant="hero"
-                      onClick={generateLinkCode}
-                      disabled={linkCodeLoading}
-                    >
-                      {linkCodeLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      ) : (
-                        <Terminal className="w-4 h-4 mr-2" />
-                      )}
-                      Generate Link Code
-                    </Button>
+                  <div className="flex flex-col items-center gap-3 py-4 text-muted-foreground">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <p className="text-sm">Generating your link code...</p>
                   </div>
                 )}
               </div>
@@ -763,13 +750,15 @@ const Onboarding = () => {
               <Button variant="heroOutline" onClick={() => setStep(0)} className="flex items-center gap-1">
                 <ChevronLeft className="w-4 h-4" /> Back
               </Button>
-              <Button
-                variant="hero"
-                className="flex-1 flex items-center justify-center gap-1"
-                onClick={() => setStep(2)}
-              >
-                Continue <ChevronRight className="w-4 h-4" />
-              </Button>
+              {accountLinked && (
+                <Button
+                  variant="hero"
+                  className="flex-1 flex items-center justify-center gap-1"
+                  onClick={() => setStep(2)}
+                >
+                  Continue <ChevronRight className="w-4 h-4" />
+                </Button>
+              )}
             </div>
           </>
         )}
