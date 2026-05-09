@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useParams } from "react-router-dom";
-import { Scroll, BookOpen, Sparkles, LayoutDashboard, LogOut } from "lucide-react";
+import { Scroll, BookOpen, Sparkles, LayoutDashboard, LogOut, HelpCircle } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -29,6 +29,7 @@ export function AppSidebar() {
   const mainItems = [
     { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
     { title: "Campaigns", url: "/campaigns", icon: Scroll },
+    { title: "Help", url: "/help", icon: HelpCircle },
   ];
 
   const campaignItems = campaignId
