@@ -80,6 +80,8 @@ const Dashboard = () => {
   const [profileLoading, setProfileLoading] = useState(true);
   const [refreshingGuilds, setRefreshingGuilds] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
+  const [discordStale, setDiscordStale] = useState(false);
 
   // Account link state
   const [linkCode, setLinkCode] = useState<string | null>(null);
@@ -161,13 +163,14 @@ const Dashboard = () => {
         (data as { error?: string } | null)?.error ||
         (error ? error.message : null);
       if (reconnectRequested || (errMsg && /reconnect discord/i.test(errMsg))) {
-        toast.message("Reconnecting Discord to refresh your servers...");
-        navigate("/onboarding");
+        setDiscordStale(true);
+        toast.message("Your Discord session has expired. Click Reconnect Discord to refresh.");
         return;
       }
       if (error) throw new Error(error.message || "Failed to refresh servers.");
       if (data?.guilds) {
         setGuilds(data.guilds as Guild[]);
+        setDiscordStale(false);
         toast.success("Server list refreshed.");
       } else if (data?.error) {
         toast.error(data.error);
@@ -201,6 +204,67 @@ const Dashboard = () => {
     };
     load();
   }, [user]);
+
+  const handleReconnectDiscord = async () => {
+    setReconnecting(true);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/discord-oauth`,
+        { headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY } }
+      );
+      const { client_id } = await res.json();
+      if (!client_id) throw new Error("Missing Discord client id");
+      const topOrigin = (() => {
+        try { return window.top?.location.origin || window.location.origin; }
+        catch { return window.location.origin; }
+      })();
+      const redirectUri = encodeURIComponent(`${topOrigin}/onboarding`);
+      const scope = encodeURIComponent("identify guilds");
+      const url = `https://discord.com/api/oauth2/authorize?client_id=${client_id}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&prompt=consent`;
+      try {
+        if (window.top && window.top !== window.self) {
+          window.top.location.href = url;
+        } else {
+          window.location.href = url;
+        }
+      } catch {
+        window.open(url, "_blank", "noopener");
+      }
+    } catch (e) {
+      toast.error("Failed to start Discord reconnect");
+      setReconnecting(false);
+    }
+  };
+
+  const handleDisconnectDiscord = async () => {
+    if (!user) return;
+    if (!window.confirm("Disconnect your Discord account? You'll need to reconnect to manage servers.")) return;
+    setDisconnecting(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          discord_id: null,
+          discord_access_token: null,
+          discord_refresh_token: null,
+          discord_token_expires_at: null,
+          discord_guilds: null,
+          selected_guild_id: null,
+        })
+        .eq("user_id", user.id);
+      if (error) throw error;
+      setDiscordId(null);
+      setGuilds([]);
+      setSelectedGuildId(null);
+      setDiscordStale(false);
+      toast.success("Discord disconnected.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to disconnect Discord.";
+      toast.error(msg);
+    } finally {
+      setDisconnecting(false);
+    }
+  };
 
   // Load and subscribe to account link rows
   useEffect(() => {
