@@ -79,6 +79,7 @@ const Dashboard = () => {
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [refreshingGuilds, setRefreshingGuilds] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
 
   // Account link state
   const [linkCode, setLinkCode] = useState<string | null>(null);
@@ -746,9 +747,27 @@ const Dashboard = () => {
                 variant="ghost"
                 size="sm"
                 className="text-xs text-muted-foreground"
-                onClick={() => navigate("/onboarding")}
+                disabled={reconnecting}
+                onClick={async () => {
+                  setReconnecting(true);
+                  try {
+                    const res = await fetch(
+                      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/discord-oauth`,
+                      { headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY } }
+                    );
+                    const { client_id } = await res.json();
+                    if (!client_id) throw new Error("Missing Discord client id");
+                    const redirectUri = encodeURIComponent(`${window.location.origin}/onboarding`);
+                    const scope = encodeURIComponent("identify guilds");
+                    window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${client_id}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&prompt=consent`;
+                  } catch (e) {
+                    toast.error("Failed to start Discord reconnect");
+                    setReconnecting(false);
+                  }
+                }}
               >
-                <Unlink className="w-3 h-3 mr-1" /> Reconnect Discord
+                <Unlink className="w-3 h-3 mr-1" />
+                {reconnecting ? "Redirecting..." : "Reconnect Discord"}
               </Button>
             </div>
           )}
