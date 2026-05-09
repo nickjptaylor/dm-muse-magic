@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      discord_account_links: {
+        Row: {
+          discord_user_id: string | null
+          guild_id: string
+          id: string
+          linked_at: string
+          user_id: string
+        }
+        Insert: {
+          discord_user_id?: string | null
+          guild_id: string
+          id?: string
+          linked_at?: string
+          user_id: string
+        }
+        Update: {
+          discord_user_id?: string | null
+          guild_id?: string
+          id?: string
+          linked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
