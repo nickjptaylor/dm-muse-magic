@@ -124,6 +124,7 @@ const Onboarding = () => {
   const [accountLinked, setAccountLinked] = useState(false);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const selectedGuildRef = useRef<string | null>(null);
+  const linkCodeRequestedRef = useRef(false);
   useEffect(() => {
     selectedGuildRef.current = selectedGuild;
   }, [selectedGuild]);
