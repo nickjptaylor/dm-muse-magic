@@ -19,9 +19,12 @@ import {
   RefreshCw,
   Users,
   Unlink,
+  Copy,
+  Clock,
+  Terminal,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 
 const tiersList = [
   {
@@ -76,12 +79,73 @@ const Dashboard = () => {
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
+  // Account link state
+  const [linkCode, setLinkCode] = useState<string | null>(null);
+  const [linkCodeLoading, setLinkCodeLoading] = useState(false);
+  const [linkCodeCopied, setLinkCodeCopied] = useState(false);
+  const linkPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const selectedGuild = useMemo(
     () => guilds.find((guild) => guild.id === selectedGuildId) ?? null,
     [guilds, selectedGuildId]
   );
   const selectedGuildBotActive = selectedGuildId ? botStatuses[selectedGuildId] === true : false;
   const selectedGuildAccountLinked = selectedGuildId ? accountLinkStatuses[selectedGuildId] === true : false;
+
+  // Clear code & polling once linked
+  useEffect(() => {
+    if (selectedGuildAccountLinked && linkPollRef.current) {
+      clearInterval(linkPollRef.current);
+      linkPollRef.current = null;
+      if (linkCode) {
+        toast.success("Account linked successfully!");
+        setLinkCode(null);
+      }
+    }
+  }, [selectedGuildAccountLinked, linkCode]);
+
+  useEffect(() => {
+    return () => {
+      if (linkPollRef.current) clearInterval(linkPollRef.current);
+    };
+  }, []);
+
+  const generateLinkCode = async () => {
+    if (!selectedGuildId) return;
+    setLinkCodeLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-link-code", {
+        body: {},
+      });
+      if (error) throw new Error(error.message || "Failed to generate link code.");
+      if (data?.code) {
+        setLinkCode(data.code);
+        if (linkPollRef.current) clearInterval(linkPollRef.current);
+        linkPollRef.current = setInterval(() => {
+          if (selectedGuildId) checkBotStatus(selectedGuildId);
+        }, 10000);
+      } else {
+        toast.error(data?.error || "Failed to generate link code.");
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to generate link code.";
+      toast.error(message);
+    } finally {
+      setLinkCodeLoading(false);
+    }
+  };
+
+  const handleCopyLinkCommand = async () => {
+    if (!linkCode) return;
+    try {
+      await navigator.clipboard.writeText(`/account link ${linkCode}`);
+      setLinkCodeCopied(true);
+      toast.success("Command copied to clipboard!");
+      setTimeout(() => setLinkCodeCopied(false), 3000);
+    } catch {
+      toast.error("Failed to copy. Please copy manually.");
+    }
+  };
 
   // Load profile data
   useEffect(() => {
