@@ -631,15 +631,40 @@ const Dashboard = () => {
                 )}
               </div>
             </div>
-            {!discordId && (
-              <Button
-                variant="hero"
-                size="sm"
-                onClick={() => navigate("/onboarding")}
-              >
-                Connect Discord
-              </Button>
-            )}
+            <div className="flex flex-col items-end gap-2">
+              {!discordId && (
+                <Button
+                  variant="hero"
+                  size="sm"
+                  onClick={() => navigate("/onboarding")}
+                >
+                  Connect Discord
+                </Button>
+              )}
+              {discordId && discordStale && (
+                <Button
+                  variant="hero"
+                  size="sm"
+                  disabled={reconnecting}
+                  onClick={handleReconnectDiscord}
+                >
+                  <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                  {reconnecting ? "Redirecting..." : "Reconnect Discord"}
+                </Button>
+              )}
+              {discordId && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-muted-foreground"
+                  disabled={disconnecting}
+                  onClick={handleDisconnectDiscord}
+                >
+                  <Unlink className="w-3 h-3 mr-1" />
+                  {disconnecting ? "Disconnecting..." : "Disconnect Discord"}
+                </Button>
+              )}
+            </div>
           </div>
 
           {profileLoading ? (
