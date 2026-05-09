@@ -78,6 +78,7 @@ const Dashboard = () => {
   const [checkingBot, setCheckingBot] = useState<string | null>(null);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [refreshingGuilds, setRefreshingGuilds] = useState(false);
 
   // Account link state
   const [linkCode, setLinkCode] = useState<string | null>(null);
