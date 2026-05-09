@@ -706,10 +706,14 @@ const Onboarding = () => {
 
                 {accountLinked ? (
                   <div className="flex flex-col items-center gap-3 py-4">
-                    <div className="w-14 h-14 rounded-full bg-green-500/10 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-full bg-green-500/10 flex items-center justify-center ring-2 ring-green-500/30">
                       <Check className="w-7 h-7 text-green-500" />
                     </div>
-                    <p className="text-green-500 font-display">Account Linked!</p>
+                    <p className="text-green-500 font-display text-lg">Account Linked</p>
+                    <span className="inline-flex items-center gap-2 rounded-full border border-green-500/40 bg-green-500/10 px-3 py-1 text-xs font-medium text-green-500">
+                      <span className="w-2 h-2 rounded-full bg-green-500" />
+                      Connected to Discord
+                    </span>
                   </div>
                 ) : linkCode ? (
                   <div className="space-y-4">
@@ -739,9 +743,15 @@ const Onboarding = () => {
                       <Clock className="w-3.5 h-3.5" />
                       <span>This code expires in 10 minutes</span>
                     </div>
-                    <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      <span>Waiting for link confirmation...</span>
+                    <div className="flex justify-center">
+                      <span className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-3 py-1.5 text-xs font-medium text-gold">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        Linking in progress
+                        <span className="relative flex h-2 w-2">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold opacity-75" />
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-gold" />
+                        </span>
+                      </span>
                     </div>
                   </div>
                 ) : (
