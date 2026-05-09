@@ -144,7 +144,13 @@ export default function DMPrep() {
               value={intro}
               onChange={(e) => setIntro(e.target.value)}
               placeholder="Your read-aloud intro will appear here. Edit freely before reading at the table."
-              className="min-h-[160px] font-body"
+              className="font-body resize-none overflow-hidden min-h-[120px]"
+              ref={(el) => {
+                if (el) {
+                  el.style.height = "auto";
+                  el.style.height = `${el.scrollHeight}px`;
+                }
+              }}
             />
             <div className="flex justify-end">
               <Button onClick={handleGenerateIntro} disabled={genIntro || !campaignId} variant="outline" className="border-gold/40">
