@@ -53,19 +53,20 @@ export default function SessionDetailPage() {
           { label: "Campaigns", to: "/campaigns" },
           { label: "Campaign", to: `/campaigns/${campaignId}` },
           { label: "Sessions", to: `/campaigns/${campaignId}/sessions` },
-          { label: `Session #${detail.session_number}` },
+          { label: detail.session_number != null ? `Session #${detail.session_number}` : "Session" },
         ]}
       />
 
       <header className="space-y-2">
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="font-display text-4xl text-gold-gradient">
-            {detail.title || `Session #${detail.session_number}`}
+            {detail.title || (detail.session_number != null ? `Session #${detail.session_number}` : "Untitled session")}
           </h1>
           <Badge className="capitalize bg-secondary text-secondary-foreground">{status}</Badge>
         </div>
         <p className="text-sm text-muted-foreground">
-          Session #{detail.session_number} {formatDate(detail.started_at || detail.created_at)}
+          {detail.session_number != null && <>Session #{detail.session_number} </>}
+          {formatDate(detail.started_at || detail.created_at)}
           {duration && (
             <span className="inline-flex items-center gap-1 ml-2">
               <Clock className="h-3 w-3" /> {duration}
