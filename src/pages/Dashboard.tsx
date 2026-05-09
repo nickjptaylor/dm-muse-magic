@@ -78,6 +78,7 @@ const Dashboard = () => {
   const [checkingBot, setCheckingBot] = useState<string | null>(null);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [refreshingGuilds, setRefreshingGuilds] = useState(false);
 
   // Account link state
   const [linkCode, setLinkCode] = useState<string | null>(null);
@@ -144,6 +145,27 @@ const Dashboard = () => {
       setTimeout(() => setLinkCodeCopied(false), 3000);
     } catch {
       toast.error("Failed to copy. Please copy manually.");
+    }
+  };
+
+  const refreshGuilds = async () => {
+    setRefreshingGuilds(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("discord-oauth", {
+        body: { action: "refresh_guilds" },
+      });
+      if (error) throw new Error(error.message || "Failed to refresh servers.");
+      if (data?.guilds) {
+        setGuilds(data.guilds as Guild[]);
+        toast.success("Server list refreshed.");
+      } else if (data?.error) {
+        toast.error(data.error);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to refresh servers.";
+      toast.error(msg);
+    } finally {
+      setRefreshingGuilds(false);
     }
   };
 
@@ -607,14 +629,30 @@ const Dashboard = () => {
             <div className="space-y-3">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-muted-foreground font-display">Your Servers</p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => guilds.forEach((g) => checkBotStatus(g.id))}
-                  className="text-muted-foreground text-xs"
-                >
-                  <RefreshCw className="w-3 h-3 mr-1" /> Refresh
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={refreshGuilds}
+                    disabled={refreshingGuilds}
+                    className="text-muted-foreground text-xs"
+                  >
+                    {refreshingGuilds ? (
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-3 h-3 mr-1" />
+                    )}
+                    Refresh servers
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => guilds.forEach((g) => checkBotStatus(g.id))}
+                    className="text-muted-foreground text-xs"
+                  >
+                    <RefreshCw className="w-3 h-3 mr-1" /> Bot status
+                  </Button>
+                </div>
               </div>
               {guilds.map((guild) => {
                 const isActive = botStatuses[guild.id] === true;

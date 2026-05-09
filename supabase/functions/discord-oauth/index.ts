@@ -39,7 +39,76 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { code, redirect_uri } = await req.json();
+    const body = await req.json();
+    const { code, redirect_uri, action } = body ?? {};
+
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const MANAGE_GUILD = 0x20n;
+    const ADMINISTRATOR = 0x8n;
+    const filterAndMapGuilds = (data: unknown) =>
+      Array.isArray(data)
+        ? (data as Record<string, unknown>[])
+            .filter((g) => {
+              if (g.owner === true) return true;
+              try {
+                const perms = BigInt((g.permissions as string) ?? "0");
+                return (perms & ADMINISTRATOR) !== 0n || (perms & MANAGE_GUILD) !== 0n;
+              } catch {
+                return false;
+              }
+            })
+            .map((g) => ({ id: g.id, name: g.name, icon: g.icon }))
+        : [];
+
+    // Refresh guilds using the stored Discord access token, no full OAuth.
+    if (action === "refresh_guilds") {
+      const { data: profile, error: profileErr } = await adminClient
+        .from("profiles")
+        .select("discord_access_token, discord_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      const storedToken = profile?.discord_access_token as string | undefined;
+      if (profileErr || !storedToken) {
+        return new Response(
+          JSON.stringify({ error: "No Discord session. Please reconnect Discord." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const guildsRes = await fetch(`${DISCORD_API}/users/@me/guilds`, {
+        headers: { Authorization: `Bearer ${storedToken}` },
+      });
+      if (guildsRes.status === 401) {
+        return new Response(
+          JSON.stringify({ error: "Discord session expired. Please reconnect Discord." }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (!guildsRes.ok) {
+        return new Response(
+          JSON.stringify({ error: "Failed to fetch Discord servers." }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const guildsData = await guildsRes.json();
+      const guilds = filterAndMapGuilds(guildsData);
+
+      await adminClient
+        .from("profiles")
+        .update({ discord_guilds: guilds })
+        .eq("user_id", user.id);
+
+      return new Response(
+        JSON.stringify({ guilds, discord_id: profile?.discord_id }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (!code || !redirect_uri) {
       return new Response(JSON.stringify({ error: "Missing code or redirect_uri" }), {
         status: 400,
@@ -86,29 +155,7 @@ Deno.serve(async (req) => {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     const guildsData = await guildsRes.json();
-
-    // Store in profile using service role
-    const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    // Only keep guilds the user can add a bot to (owner, ADMINISTRATOR, or MANAGE_GUILD).
-    const MANAGE_GUILD = 0x20n;
-    const ADMINISTRATOR = 0x8n;
-    const guilds = Array.isArray(guildsData)
-      ? guildsData
-          .filter((g: Record<string, unknown>) => {
-            if (g.owner === true) return true;
-            try {
-              const perms = BigInt((g.permissions as string) ?? "0");
-              return (perms & ADMINISTRATOR) !== 0n || (perms & MANAGE_GUILD) !== 0n;
-            } catch {
-              return false;
-            }
-          })
-          .map((g: Record<string, unknown>) => ({ id: g.id, name: g.name, icon: g.icon }))
-      : [];
+    const guilds = filterAndMapGuilds(guildsData);
 
     await adminClient
       .from("profiles")
