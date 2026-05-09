@@ -131,6 +131,8 @@ export type Database = {
           discord_access_token: string | null
           discord_guilds: Json | null
           discord_id: string | null
+          discord_refresh_token: string | null
+          discord_token_expires_at: string | null
           display_name: string | null
           id: string
           onboarding_completed: boolean
@@ -143,6 +145,8 @@ export type Database = {
           discord_access_token?: string | null
           discord_guilds?: Json | null
           discord_id?: string | null
+          discord_refresh_token?: string | null
+          discord_token_expires_at?: string | null
           display_name?: string | null
           id?: string
           onboarding_completed?: boolean
@@ -155,6 +159,8 @@ export type Database = {
           discord_access_token?: string | null
           discord_guilds?: Json | null
           discord_id?: string | null
+          discord_refresh_token?: string | null
+          discord_token_expires_at?: string | null
           display_name?: string | null
           id?: string
           onboarding_completed?: boolean
