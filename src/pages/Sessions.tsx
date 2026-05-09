@@ -31,6 +31,8 @@ export default function Sessions() {
   const [filter, setFilter] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [returnedCampaignId, setReturnedCampaignId] = useState<string | null>(null);
+  const [returnedCampaignName, setReturnedCampaignName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -58,6 +60,8 @@ export default function Sessions() {
       .then((res) => {
         setSessions(res.sessions ?? []);
         setTotal(res.total ?? 0);
+        setReturnedCampaignId(res.campaign_id ?? null);
+        setReturnedCampaignName(res.campaign_name ?? null);
       })
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
@@ -101,6 +105,18 @@ export default function Sessions() {
       </div>
 
       {error && <Card><CardContent className="py-10 text-center text-destructive">{error}</CardContent></Card>}
+
+      {returnedCampaignId && campaignId && returnedCampaignId !== campaignId && (
+        <Card className="border-gold/40 bg-gold/5">
+          <CardContent className="py-4 text-sm text-muted-foreground">
+            Showing sessions for <span className="text-foreground font-medium">{returnedCampaignName}</span>.
+            This campaign has no sessions yet.{" "}
+            <Link to={`/campaigns/${returnedCampaignId}/sessions`} className="text-gold underline">
+              View {returnedCampaignName} sessions
+            </Link>
+          </CardContent>
+        </Card>
+      )}
 
       {loading && sessions === null && (
         <div className="flex items-center justify-center py-16">
