@@ -827,6 +827,16 @@ const Dashboard = () => {
                           <span className="text-[11px] text-muted-foreground">
                             {selectedGuildAccountLinked ? "Account linked" : "Account not linked"}
                           </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-[11px] text-muted-foreground hover:text-destructive"
+                            disabled={removingBot === guild.id}
+                            onClick={() => handleRemoveBot(guild.id, guild.name)}
+                          >
+                            <Unlink className="w-3 h-3 mr-1" />
+                            {removingBot === guild.id ? "Removing..." : "Remove bot"}
+                          </Button>
                         </div>
                       ) : isSelected && isChecking ? (
                         <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
