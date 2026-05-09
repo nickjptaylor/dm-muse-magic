@@ -550,6 +550,60 @@ const Dashboard = () => {
               <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
             </div>
           ) : discordId && guilds.length > 0 ? (
+            <>
+            {/* Account linking (top) */}
+            {selectedGuild && selectedGuildBotActive && !selectedGuildAccountLinked && (
+              <div className="mb-4 rounded-lg border border-gold/40 bg-gold/5 p-4 space-y-3">
+                <div>
+                  <p className="text-sm font-display text-foreground">Link your account in {selectedGuild.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Generate a one-time code, then in Discord run <code className="font-mono text-foreground">/account link</code> and paste the code when prompted.
+                  </p>
+                </div>
+                {linkCode ? (
+                  <>
+                    <button
+                      onClick={handleCopyLinkCommand}
+                      className="w-full group rounded-lg border-2 border-dashed border-gold/30 bg-gold/5 hover:border-gold/50 hover:bg-gold/10 p-4 transition-all cursor-pointer"
+                    >
+                      <code className="text-2xl md:text-3xl font-mono font-bold text-gold tracking-widest block text-center">
+                        {linkCode}
+                      </code>
+                      <div className="flex items-center justify-center gap-1.5 mt-2 text-xs text-muted-foreground group-hover:text-gold transition-colors">
+                        {linkCodeCopied ? (
+                          <><Check className="w-3.5 h-3.5" /> Copied!</>
+                        ) : (
+                          <><Copy className="w-3.5 h-3.5" /> Click to copy</>
+                        )}
+                      </div>
+                    </button>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5" /> Expires in 10 minutes
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Loader2 className="w-3 h-3 animate-spin" /> Waiting for confirmation...
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <Button
+                    variant="hero"
+                    size="sm"
+                    onClick={generateLinkCode}
+                    disabled={linkCodeLoading}
+                  >
+                    {linkCodeLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : (
+                      <Terminal className="w-4 h-4 mr-2" />
+                    )}
+                    Generate Link Code
+                  </Button>
+                )}
+              </div>
+            )}
+
             <div className="space-y-3">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-muted-foreground font-display">Your Servers</p>
@@ -624,6 +678,7 @@ const Dashboard = () => {
                 );
               })}
             </div>
+            </>
           ) : discordId ? (
             <p className="text-sm text-muted-foreground py-4">No servers found. Try reconnecting Discord.</p>
           ) : (
@@ -634,59 +689,6 @@ const Dashboard = () => {
               <Button variant="heroOutline" size="sm" onClick={() => navigate("/onboarding")}>
                 Set Up Discord
               </Button>
-            </div>
-          )}
-
-          {/* Account linking */}
-          {discordId && selectedGuild && selectedGuildBotActive && !selectedGuildAccountLinked && (
-            <div className="mt-4 rounded-lg border border-gold-subtle bg-secondary/30 p-4 space-y-3">
-              <div>
-                <p className="text-sm font-display text-foreground">Link your account in {selectedGuild.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  Generate a one-time code and run the command in your Discord server to link your account to the bot.
-                </p>
-              </div>
-              {linkCode ? (
-                <>
-                  <button
-                    onClick={handleCopyLinkCommand}
-                    className="w-full group rounded-lg border-2 border-dashed border-gold/30 bg-gold/5 hover:border-gold/50 hover:bg-gold/10 p-4 transition-all cursor-pointer"
-                  >
-                    <code className="text-lg md:text-xl font-mono font-bold text-gold tracking-wider block text-center">
-                      /account link {linkCode}
-                    </code>
-                    <div className="flex items-center justify-center gap-1.5 mt-2 text-xs text-muted-foreground group-hover:text-gold transition-colors">
-                      {linkCodeCopied ? (
-                        <><Check className="w-3.5 h-3.5" /> Copied!</>
-                      ) : (
-                        <><Copy className="w-3.5 h-3.5" /> Click to copy</>
-                      )}
-                    </div>
-                  </button>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5" /> Expires in 10 minutes
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Loader2 className="w-3 h-3 animate-spin" /> Waiting for confirmation...
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <Button
-                  variant="hero"
-                  size="sm"
-                  onClick={generateLinkCode}
-                  disabled={linkCodeLoading}
-                >
-                  {linkCodeLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  ) : (
-                    <Terminal className="w-4 h-4 mr-2" />
-                  )}
-                  Generate Link Code
-                </Button>
-              )}
             </div>
           )}
 
