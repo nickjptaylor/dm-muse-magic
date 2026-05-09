@@ -629,14 +629,30 @@ const Dashboard = () => {
             <div className="space-y-3">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-muted-foreground font-display">Your Servers</p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => guilds.forEach((g) => checkBotStatus(g.id))}
-                  className="text-muted-foreground text-xs"
-                >
-                  <RefreshCw className="w-3 h-3 mr-1" /> Refresh
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={refreshGuilds}
+                    disabled={refreshingGuilds}
+                    className="text-muted-foreground text-xs"
+                  >
+                    {refreshingGuilds ? (
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-3 h-3 mr-1" />
+                    )}
+                    Refresh servers
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => guilds.forEach((g) => checkBotStatus(g.id))}
+                    className="text-muted-foreground text-xs"
+                  >
+                    <RefreshCw className="w-3 h-3 mr-1" /> Bot status
+                  </Button>
+                </div>
               </div>
               {guilds.map((guild) => {
                 const isActive = botStatuses[guild.id] === true;
