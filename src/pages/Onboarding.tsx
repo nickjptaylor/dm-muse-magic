@@ -169,6 +169,18 @@ const Onboarding = () => {
           setSelectedGuild(data.selected_guild_id);
         }
       }
+
+      // Check if account is already linked for the selected guild
+      const { data: links } = await supabase
+        .from("discord_account_links")
+        .select("guild_id")
+        .eq("user_id", user.id);
+      if (links && links.length > 0) {
+        const guildId = data?.selected_guild_id;
+        if (guildId && links.some((l) => l.guild_id === guildId)) {
+          setAccountLinked(true);
+        }
+      }
     };
     loadProfile();
   }, [user]);
@@ -408,22 +420,14 @@ const Onboarding = () => {
       }
 
       try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const token = sessionData.session?.access_token;
-        if (!token) return;
-
-        const res = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bot-proxy?action=status&guild_id=${selectedGuild}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            },
-          }
-        );
-        const result = await res.json();
-        if (result.linked === true || result.account_linked === true) {
+        if (!user) return;
+        const { data: links } = await supabase
+          .from("discord_account_links")
+          .select("guild_id")
+          .eq("user_id", user.id)
+          .eq("guild_id", selectedGuild)
+          .maybeSingle();
+        if (links) {
           setAccountLinked(true);
           if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
           toast.success("Account linked successfully!");
@@ -432,7 +436,7 @@ const Onboarding = () => {
       } catch {
         // Silently continue polling
       }
-    }, 10000);
+    }, 3000);
   };
 
   const handleCopyCode = async () => {
