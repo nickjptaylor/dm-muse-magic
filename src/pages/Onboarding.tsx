@@ -102,6 +102,7 @@ const Onboarding = () => {
   const [step, setStep] = useState(0);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
+  const [awaitingPayment, setAwaitingPayment] = useState(false);
 
   // Discord state
   const [discordLoading, setDiscordLoading] = useState(false);
@@ -203,6 +204,44 @@ const Onboarding = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGuild, botStatuses, accountLinked]);
+
+  // Poll Stripe subscription while waiting for checkout completion
+  useEffect(() => {
+    if (!awaitingPayment) return;
+    const expectedProductId = selectedPlan
+      ? TIERS[selectedPlan as keyof typeof TIERS]?.product_id
+      : null;
+    let cancelled = false;
+    const interval = setInterval(async () => {
+      await checkSubscription();
+    }, 4000);
+    const timeout = setTimeout(() => {
+      if (!cancelled) {
+        setAwaitingPayment(false);
+        toast.error("We didn't detect a completed payment. Try again or refresh after paying.");
+      }
+    }, 5 * 60 * 1000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [awaitingPayment, selectedPlan]);
+
+  // Advance to the success step once the matching subscription is confirmed
+  useEffect(() => {
+    if (!awaitingPayment) return;
+    if (!subscription.subscribed) return;
+    const expectedProductId = selectedPlan
+      ? TIERS[selectedPlan as keyof typeof TIERS]?.product_id
+      : null;
+    if (expectedProductId && subscription.productId !== expectedProductId) return;
+    setAwaitingPayment(false);
+    toast.success("Payment confirmed! Your plan is active.");
+    setStep(3);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [awaitingPayment, subscription.subscribed, subscription.productId, selectedPlan]);
 
   const getDiscordRedirectUri = () => {
     return `${window.location.origin}/onboarding`;
@@ -469,15 +508,11 @@ const Onboarding = () => {
       if (error) throw error;
       if (data?.url) {
         window.open(data.url, "_blank");
-        toast.info("Complete checkout in the new tab, then come back here to continue.", {
+        toast.info("Complete checkout in the new tab. We'll unlock your plan as soon as payment is confirmed.", {
           duration: 10000,
         });
         setSelectedPlan(tierKey);
-        const poll = setInterval(async () => {
-          await checkSubscription();
-        }, 5000);
-        setTimeout(() => clearInterval(poll), 120000);
-        setStep(3);
+        setAwaitingPayment(true);
       }
     } catch {
       toast.error("Failed to start checkout. Please try again.");
@@ -799,6 +834,34 @@ const Onboarding = () => {
         <h2 className="text-3xl font-display text-gold-gradient mb-2">Choose Your Path</h2>
         <p className="text-muted-foreground">Select the plan that fits your adventuring party</p>
       </div>
+      {awaitingPayment && (
+        <div className="max-w-2xl mx-auto rounded-lg border border-gold/40 bg-gold/5 p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+          <div className="flex items-center gap-3">
+            <Loader2 className="w-5 h-5 animate-spin text-gold" />
+            <div>
+              <p className="font-display text-foreground">Waiting for payment confirmation...</p>
+              <p className="text-xs text-muted-foreground">
+                Finish checkout in the Stripe tab. We'll unlock your plan automatically.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="heroOutline" size="sm" onClick={() => checkSubscription()}>
+              Check now
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setAwaitingPayment(false);
+                setSelectedPlan(null);
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 max-w-6xl mx-auto">
         {plans.map((plan) => {
           const Icon = plan.icon;
@@ -806,7 +869,7 @@ const Onboarding = () => {
             <button
               key={plan.name}
               onClick={() => handleSelectPlan(plan.tierKey)}
-              disabled={loadingCheckout}
+              disabled={loadingCheckout || awaitingPayment}
               className={`relative rounded-lg border p-6 text-left transition-all duration-300 hover:scale-[1.02] ${
                 plan.featured
                   ? "border-gold/40 bg-card glow-gold"
