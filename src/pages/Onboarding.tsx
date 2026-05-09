@@ -190,6 +190,17 @@ const Onboarding = () => {
     const redirectUri = encodeURIComponent(getDiscordRedirectUri());
     const scope = encodeURIComponent("identify guilds");
     const url = `https://discord.com/api/oauth2/authorize?client_id=${discordClientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
+    // Break out of the Lovable preview iframe — Discord refuses to load in iframes.
+    try {
+      if (window.top && window.top !== window.self) {
+        window.top.location.href = url;
+        return;
+      }
+    } catch {
+      // Cross-origin top access blocked — fall back to opening a new tab.
+      window.open(url, "_blank", "noopener,noreferrer");
+      return;
+    }
     window.location.href = url;
   };
 
