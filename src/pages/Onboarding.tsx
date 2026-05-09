@@ -169,6 +169,18 @@ const Onboarding = () => {
           setSelectedGuild(data.selected_guild_id);
         }
       }
+
+      // Check if account is already linked for the selected guild
+      const { data: links } = await supabase
+        .from("discord_account_links")
+        .select("guild_id")
+        .eq("user_id", user.id);
+      if (links && links.length > 0) {
+        const guildId = data?.selected_guild_id;
+        if (guildId && links.some((l) => l.guild_id === guildId)) {
+          setAccountLinked(true);
+        }
+      }
     };
     loadProfile();
   }, [user]);
