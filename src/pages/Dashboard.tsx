@@ -82,6 +82,7 @@ const Dashboard = () => {
   const [reconnecting, setReconnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [discordStale, setDiscordStale] = useState(false);
+  const [removingBot, setRemovingBot] = useState<string | null>(null);
 
   // Account link state
   const [linkCode, setLinkCode] = useState<string | null>(null);
@@ -263,6 +264,39 @@ const Dashboard = () => {
       toast.error(msg);
     } finally {
       setDisconnecting(false);
+    }
+  };
+
+  const handleRemoveBot = async (guildId: string, guildName: string) => {
+    if (!window.confirm(`Remove the TavernRecap bot from ${guildName}? You can re-add it later from this dashboard.`)) return;
+    setRemovingBot(guildId);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) throw new Error("Not signed in");
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bot-proxy?action=leave&guild_id=${guildId}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        }
+      );
+      const data = await res.json().catch(() => ({}));
+      if ((data as { error?: string })?.error) {
+        toast.error((data as { error?: string }).error || "Failed to remove bot");
+      } else {
+        setBotStatuses((prev) => ({ ...prev, [guildId]: false }));
+        toast.success(`Bot removed from ${guildName}`);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to remove bot.";
+      toast.error(msg);
+    } finally {
+      setRemovingBot(null);
     }
   };
 
@@ -793,6 +827,16 @@ const Dashboard = () => {
                           <span className="text-[11px] text-muted-foreground">
                             {selectedGuildAccountLinked ? "Account linked" : "Account not linked"}
                           </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-[11px] text-muted-foreground hover:text-destructive"
+                            disabled={removingBot === guild.id}
+                            onClick={() => handleRemoveBot(guild.id, guild.name)}
+                          >
+                            <Unlink className="w-3 h-3 mr-1" />
+                            {removingBot === guild.id ? "Removing..." : "Remove bot"}
+                          </Button>
                         </div>
                       ) : isSelected && isChecking ? (
                         <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
