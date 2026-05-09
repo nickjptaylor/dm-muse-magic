@@ -138,9 +138,9 @@ const Dashboard = () => {
   const handleCopyLinkCommand = async () => {
     if (!linkCode) return;
     try {
-      await navigator.clipboard.writeText(`/account link ${linkCode}`);
+      await navigator.clipboard.writeText(linkCode);
       setLinkCodeCopied(true);
-      toast.success("Command copied to clipboard!");
+      toast.success("Code copied to clipboard!");
       setTimeout(() => setLinkCodeCopied(false), 3000);
     } catch {
       toast.error("Failed to copy. Please copy manually.");
@@ -190,13 +190,8 @@ const Dashboard = () => {
       );
       const result = await res.json();
       setBotStatuses((prev) => ({ ...prev, [guildId]: result.active === true }));
-      setAccountLinkStatuses((prev) => ({
-        ...prev,
-        [guildId]: result.linked === true || result.account_linked === true,
-      }));
     } catch {
       setBotStatuses((prev) => ({ ...prev, [guildId]: false }));
-      setAccountLinkStatuses((prev) => ({ ...prev, [guildId]: false }));
     } finally {
       setCheckingBot(null);
     }
