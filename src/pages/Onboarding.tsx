@@ -254,6 +254,15 @@ const Onboarding = () => {
     }
   }, [step, guilds]);
 
+  // Auto-refresh bot status on step 1 to detect when bot is added/removed
+  useEffect(() => {
+    if (step !== 1 || guilds.length === 0) return;
+    const interval = setInterval(() => {
+      checkAllBotStatuses();
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [step, guilds, checkAllBotStatuses]);
+
   // Redirect if not logged in (after all hooks)
   if (!user) {
     navigate("/auth?mode=signup");
