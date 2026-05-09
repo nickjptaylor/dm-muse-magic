@@ -10,7 +10,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Loader2, Clock, ChevronDown, Sparkles } from "lucide-react";
+import { Loader2, Clock, ChevronDown, Sparkles, ImageOff } from "lucide-react";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { formatDate, formatDuration } from "@/lib/format";
 
@@ -18,6 +18,7 @@ export default function SessionDetailPage() {
   const { campaignId, sessionId } = useParams();
   const [detail, setDetail] = useState<SessionDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [brokenArt, setBrokenArt] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!sessionId) return;
@@ -104,16 +105,28 @@ export default function SessionDetailPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {detail.summary.key_moments.map((m) => (
                   <Card key={m.id} className="overflow-hidden">
-                    {m.art?.s3_url && (
+                    {m.art?.s3_url && !brokenArt.has(m.id) ? (
                       <div className="aspect-[4/3] w-full overflow-hidden bg-muted">
                         <img
                           src={m.art.s3_url}
                           alt={m.description?.slice(0, 80) || "Key moment"}
                           className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                           loading="lazy"
+                          onError={() =>
+                            setBrokenArt((prev) => {
+                              const next = new Set(prev);
+                              next.add(m.id);
+                              return next;
+                            })
+                          }
                         />
                       </div>
-                    )}
+                    ) : m.art?.s3_url ? (
+                      <div className="aspect-[4/3] w-full flex flex-col items-center justify-center bg-muted text-muted-foreground gap-2 text-xs">
+                        <ImageOff className="h-6 w-6 opacity-60" />
+                        <span>Artwork unavailable</span>
+                      </div>
+                    ) : null}
                     <CardContent className="p-4">
                       <p className="text-sm text-foreground whitespace-pre-wrap">{m.description}</p>
                     </CardContent>
