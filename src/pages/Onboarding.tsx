@@ -102,6 +102,7 @@ const Onboarding = () => {
   const [step, setStep] = useState(0);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
+  const [awaitingPayment, setAwaitingPayment] = useState(false);
 
   // Discord state
   const [discordLoading, setDiscordLoading] = useState(false);
