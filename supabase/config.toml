@@ -5,3 +5,5 @@ project_id = "kowjiumihltsgebyzgox"
     verify_jwt = false
   [functions.process-email-queue]
     verify_jwt = true
+  [functions.bot-link-callback]
+    verify_jwt = false
