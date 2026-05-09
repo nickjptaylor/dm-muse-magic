@@ -148,6 +148,27 @@ const Dashboard = () => {
     }
   };
 
+  const refreshGuilds = async () => {
+    setRefreshingGuilds(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("discord-oauth", {
+        body: { action: "refresh_guilds" },
+      });
+      if (error) throw new Error(error.message || "Failed to refresh servers.");
+      if (data?.guilds) {
+        setGuilds(data.guilds as Guild[]);
+        toast.success("Server list refreshed.");
+      } else if (data?.error) {
+        toast.error(data.error);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to refresh servers.";
+      toast.error(msg);
+    } finally {
+      setRefreshingGuilds(false);
+    }
+  };
+
   // Load profile data
   useEffect(() => {
     if (!user) return;
