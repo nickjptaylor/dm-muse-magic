@@ -68,27 +68,70 @@ Deno.serve(async (req) => {
     if (action === "refresh_guilds") {
       const { data: profile, error: profileErr } = await adminClient
         .from("profiles")
-        .select("discord_access_token, discord_id")
+        .select("discord_access_token, discord_refresh_token, discord_id")
         .eq("user_id", user.id)
         .maybeSingle();
 
-      const storedToken = profile?.discord_access_token as string | undefined;
-      if (profileErr || !storedToken) {
+      let storedToken = profile?.discord_access_token as string | undefined;
+      const refreshToken = profile?.discord_refresh_token as string | undefined;
+      if (profileErr || (!storedToken && !refreshToken)) {
         return new Response(
           JSON.stringify({ error: "No Discord session. Please reconnect Discord." }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      const guildsRes = await fetch(`${DISCORD_API}/users/@me/guilds`, {
-        headers: { Authorization: `Bearer ${storedToken}` },
-      });
+      const clientId = Deno.env.get("DISCORD_CLIENT_ID")!;
+      const clientSecret = Deno.env.get("DISCORD_CLIENT_SECRET")!;
+
+      const tryRefresh = async (): Promise<boolean> => {
+        if (!refreshToken) return false;
+        const r = await fetch(`${DISCORD_API}/oauth2/token`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            client_id: clientId,
+            client_secret: clientSecret,
+            grant_type: "refresh_token",
+            refresh_token: refreshToken,
+          }),
+        });
+        if (!r.ok) return false;
+        const t = await r.json();
+        storedToken = t.access_token;
+        const expiresAt = t.expires_in
+          ? new Date(Date.now() + Number(t.expires_in) * 1000).toISOString()
+          : null;
+        await adminClient
+          .from("profiles")
+          .update({
+            discord_access_token: t.access_token,
+            discord_refresh_token: t.refresh_token ?? refreshToken,
+            discord_token_expires_at: expiresAt,
+          })
+          .eq("user_id", user.id);
+        return true;
+      };
+
+      let guildsRes = storedToken
+        ? await fetch(`${DISCORD_API}/users/@me/guilds`, {
+            headers: { Authorization: `Bearer ${storedToken}` },
+          })
+        : new Response(null, { status: 401 });
+
       if (guildsRes.status === 401) {
-        return new Response(
-          JSON.stringify({ error: "Discord session expired. Please reconnect Discord." }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        const refreshed = await tryRefresh();
+        if (!refreshed) {
+          return new Response(
+            JSON.stringify({ error: "Discord session expired. Please reconnect Discord." }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        guildsRes = await fetch(`${DISCORD_API}/users/@me/guilds`, {
+          headers: { Authorization: `Bearer ${storedToken}` },
+        });
       }
+
       if (!guildsRes.ok) {
         return new Response(
           JSON.stringify({ error: "Failed to fetch Discord servers." }),
@@ -143,6 +186,10 @@ Deno.serve(async (req) => {
 
     const tokenData = await tokenRes.json();
     const accessToken = tokenData.access_token;
+    const discordRefreshToken = tokenData.refresh_token ?? null;
+    const tokenExpiresAt = tokenData.expires_in
+      ? new Date(Date.now() + Number(tokenData.expires_in) * 1000).toISOString()
+      : null;
 
     // Fetch user identity
     const meRes = await fetch(`${DISCORD_API}/users/@me`, {
@@ -162,6 +209,8 @@ Deno.serve(async (req) => {
       .update({
         discord_id: meData.id,
         discord_access_token: accessToken,
+        discord_refresh_token: discordRefreshToken,
+        discord_token_expires_at: tokenExpiresAt,
         discord_guilds: guilds,
       })
       .eq("user_id", user.id);
