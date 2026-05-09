@@ -169,6 +169,45 @@ const Dashboard = () => {
     load();
   }, [user]);
 
+  // Load and subscribe to account link rows
+  useEffect(() => {
+    if (!user) return;
+
+    const loadLinks = async () => {
+      const { data } = await supabase
+        .from("discord_account_links")
+        .select("guild_id")
+        .eq("user_id", user.id);
+      if (data) {
+        const map: Record<string, boolean> = {};
+        for (const row of data) map[row.guild_id as string] = true;
+        setAccountLinkStatuses(map);
+      }
+    };
+    loadLinks();
+
+    const channel = supabase
+      .channel(`account-links-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "discord_account_links", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const row = (payload.new ?? payload.old) as { guild_id?: string } | null;
+          const guildId = row?.guild_id;
+          if (!guildId) return;
+          setAccountLinkStatuses((prev) => ({
+            ...prev,
+            [guildId]: payload.eventType !== "DELETE",
+          }));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   const checkBotStatus = useCallback(async (guildId: string) => {
     setCheckingBot(guildId);
     try {
