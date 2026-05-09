@@ -757,9 +757,22 @@ const Dashboard = () => {
                     );
                     const { client_id } = await res.json();
                     if (!client_id) throw new Error("Missing Discord client id");
-                    const redirectUri = encodeURIComponent(`${window.location.origin}/onboarding`);
+                    const topOrigin = (() => {
+                      try { return window.top?.location.origin || window.location.origin; }
+                      catch { return window.location.origin; }
+                    })();
+                    const redirectUri = encodeURIComponent(`${topOrigin}/onboarding`);
                     const scope = encodeURIComponent("identify guilds");
-                    window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${client_id}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&prompt=consent`;
+                    const url = `https://discord.com/api/oauth2/authorize?client_id=${client_id}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&prompt=consent`;
+                    try {
+                      if (window.top && window.top !== window.self) {
+                        window.top.location.href = url;
+                      } else {
+                        window.location.href = url;
+                      }
+                    } catch {
+                      window.open(url, "_blank", "noopener");
+                    }
                   } catch (e) {
                     toast.error("Failed to start Discord reconnect");
                     setReconnecting(false);
